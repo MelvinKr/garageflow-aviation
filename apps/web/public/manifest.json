@@ -1,0 +1,11 @@
+{
+  "name": "Garageflow Aviation",
+  "short_name": "Garageflow",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "description": "PWA MRO aviation — offline-first",
+  "icons": []
+}
+
