@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export type Col<T> = { key: keyof T; label: string; render?: (row: T) => React.ReactNode };
 
@@ -7,26 +7,68 @@ export function DataTable<T extends { [k: string]: any }>({
   rows,
   cols,
   onRowClick,
+  sortable = true,
 }: {
   rows: T[];
   cols: Col<T>[];
   onRowClick?: (row: T) => void;
+  sortable?: boolean;
 }) {
-  const head = useMemo(() => cols.map((c) => c.label), [cols]);
+  const [sortKey, setSortKey] = useState<keyof T | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const sorted = useMemo(() => {
+    if (!sortKey) return rows;
+    const copy = [...rows];
+    copy.sort((a, b) => {
+      const va = a[sortKey as string];
+      const vb = b[sortKey as string];
+      if (typeof va === "number" && typeof vb === "number") {
+        return sortDir === "asc" ? va - vb : vb - va;
+      }
+      const sa = String(va ?? "").toLowerCase();
+      const sb = String(vb ?? "").toLowerCase();
+      return sortDir === "asc" ? sa.localeCompare(sb) : sb.localeCompare(sa);
+    });
+    return copy;
+  }, [rows, sortKey, sortDir]);
+
+  function clickHeader(key: keyof T) {
+    if (!sortable) return;
+    setSortKey((prev) => {
+      if (prev === key) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        return prev;
+      }
+      setSortDir("asc");
+      return key;
+    });
+  }
+
   return (
     <div className="overflow-x-auto rounded-xl border">
       <table className="min-w-full text-sm">
         <thead>
           <tr className="bg-gray-50">
-            {head.map((h) => (
-              <th key={h} className="px-3 py-2 text-left font-medium">
-                {h}
+            {cols.map((c) => (
+              <th
+                key={String(c.key)}
+                className={`px-3 py-2 text-left font-medium ${sortable ? "cursor-pointer select-none" : ""}`}
+                onClick={() => clickHeader(c.key)}
+                title={sortable ? "Trier" : undefined}
+              >
+                <span className="inline-flex items-center gap-1">
+                  {c.label}
+                  {sortKey === c.key && (
+                    <span className="text-gray-400">{sortDir === "asc" ? "▲" : "▼"}</span>
+                  )}
+                </span>
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => (
+          {sorted.map((r, i) => (
             <tr
               key={i}
               className={`border-t ${onRowClick ? "hover:bg-gray-50 cursor-pointer" : ""}`}

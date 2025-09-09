@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type Part = {
   id: string;
@@ -15,7 +15,15 @@ type Part = {
   lastIn?: string;
 };
 
-export function PartDrawer({ part, onClose }: { part: Part | null; onClose: () => void }) {
+export function PartDrawer({
+  part,
+  onClose,
+  onMovement,
+}: {
+  part: Part | null;
+  onClose: () => void;
+  onMovement?: (delta: number, reason: string, fileName?: string) => void;
+}) {
   useEffect(() => {
     function esc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -68,11 +76,12 @@ export function PartDrawer({ part, onClose }: { part: Part | null; onClose: () =
               <Field label="Dernière entrée" value={part.lastIn} />
             </div>
 
-            <div className="pt-2">
-              <button className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-white hover:bg-blue-700">
-                Mouvement stock
-              </button>
-            </div>
+            <StockMovementForm
+              onSubmit={(payload) => {
+                onMovement?.(payload.signedQty, payload.reason, payload.fileName);
+                onClose();
+              }}
+            />
           </div>
         )}
       </aside>
@@ -89,3 +98,62 @@ function Field({ label, value }: { label: string; value?: string }) {
   );
 }
 
+function StockMovementForm({
+  onSubmit,
+}: {
+  onSubmit: (p: { signedQty: number; reason: string; fileName?: string }) => void;
+}) {
+  const [type, setType] = useState<"IN" | "OUT">("IN");
+  const [qty, setQty] = useState<number>(1);
+  const [reason, setReason] = useState<string>("");
+  const [fileName, setFileName] = useState<string | undefined>(undefined);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const signed = (type === "IN" ? 1 : -1) * Math.abs(Number(qty) || 0);
+    if (signed === 0) return;
+    onSubmit({ signedQty: signed, reason: reason.trim(), fileName });
+  }
+
+  return (
+    <form className="space-y-3" onSubmit={submit}>
+      <div className="text-sm font-medium">Mouvement stock</div>
+      <div className="flex gap-2">
+        <select
+          className="rounded-md border px-2 py-1"
+          value={type}
+          onChange={(e) => setType(e.target.value as any)}
+        >
+          <option value="IN">Entrée (+)</option>
+          <option value="OUT">Sortie (−)</option>
+        </select>
+        <input
+          type="number"
+          min={1}
+          value={qty}
+          onChange={(e) => setQty(Number(e.target.value))}
+          className="w-24 rounded-md border px-2 py-1"
+        />
+      </div>
+      <input
+        placeholder="Motif (ex: réception fournisseur, consommation WO)"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        className="w-full rounded-md border px-3 py-2"
+      />
+      <div>
+        <input
+          type="file"
+          onChange={(e) => setFileName(e.target.files?.[0]?.name)}
+          className="text-sm"
+        />
+        {fileName && <div className="text-xs text-gray-500 mt-1">Pièce jointe: {fileName}</div>}
+      </div>
+      <div className="pt-1">
+        <button type="submit" className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-white hover:bg-blue-700">
+          Enregistrer le mouvement
+        </button>
+      </div>
+    </form>
+  );
+}

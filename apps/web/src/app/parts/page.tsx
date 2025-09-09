@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getParts } from "@/lib/mock";
 import { DataTable } from "@/components/DataTable";
 import { PartDrawer } from "@/components/PartDrawer";
@@ -8,6 +8,7 @@ type Row = ReturnType<typeof getParts>[number] & { sku?: string };
 
 export default function PartsPage() {
   const all = getParts() as Row[];
+  const [deltas, setDeltas] = useState<Record<string, number>>({});
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
   const [cert, setCert] = useState("");
@@ -16,16 +17,37 @@ export default function PartsPage() {
   const cats = useMemo(() => Array.from(new Set(all.map((p) => p.category).filter(Boolean))) as string[], [all]);
   const certs = useMemo(() => Array.from(new Set(all.map((p) => p.cert).filter(Boolean))) as string[], [all]);
 
+  // Load persisted movements once
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("gf_movements");
+      if (!raw) return;
+      const arr: { sku?: string; id?: string; delta: number }[] = JSON.parse(raw);
+      const agg: Record<string, number> = {};
+      for (const m of arr) {
+        const key = m.sku || m.id;
+        if (!key) continue;
+        agg[key] = (agg[key] || 0) + (Number(m.delta) || 0);
+      }
+      setDeltas(agg);
+    } catch {}
+  }, []);
+
   const rows = useMemo(() => {
     const qq = q.trim().toLowerCase();
-    return all.filter((p) => {
+    const filtered = all.filter((p) => {
       const matchQ = !qq ||
         (p.name?.toLowerCase().includes(qq) || p.sku?.toLowerCase().includes(qq) || p.id?.toLowerCase().includes(qq));
       const matchCat = !cat || p.category === cat;
       const matchCert = !cert || p.cert === cert;
       return matchQ && matchCat && matchCert;
     });
-  }, [all, q, cat, cert]);
+    // apply effective quantity with local deltas
+    return filtered.map((p) => ({
+      ...p,
+      qty: (p.qty ?? 0) + (deltas[p.sku || p.id] || 0),
+    }));
+  }, [all, q, cat, cert, deltas]);
 
   const low = (qty: number, min: number) => (qty <= min ? <span className="text-red-600 font-medium">{qty}</span> : qty);
 
@@ -85,7 +107,21 @@ export default function PartsPage() {
         onRowClick={(r) => setSelected(r)}
       />
 
-      <PartDrawer part={selected} onClose={() => setSelected(null)} />
+      <PartDrawer
+        part={selected}
+        onClose={() => setSelected(null)}
+        onMovement={(delta, reason, fileName) => {
+          if (!selected) return;
+          const key = selected.sku || selected.id;
+          setDeltas((prev) => ({ ...prev, [key]: (prev[key] || 0) + delta }));
+          try {
+            const raw = localStorage.getItem("gf_movements");
+            const arr = raw ? JSON.parse(raw) : [];
+            arr.push({ sku: selected.sku, id: selected.id, delta, reason, fileName, at: new Date().toISOString() });
+            localStorage.setItem("gf_movements", JSON.stringify(arr));
+          } catch {}
+        }}
+      />
     </section>
   );
 }
