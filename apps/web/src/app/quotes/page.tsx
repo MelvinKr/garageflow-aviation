@@ -4,9 +4,15 @@ import { useState } from "react";
 import { useMockState, Quote } from "@/store/mockState";
 import { getCustomers, getAircraft, getParts } from "@/lib/mock";
 import { computeTotals } from "@/lib/quote";
+import { buildQuoteHtml } from "@/lib/printQuote";
+import { openPrint } from "@/lib/openPrint";
+import { useToast } from "@/components/ui/useToast";
+import { useRouter } from "next/navigation";
 
 export default function QuotesPage() {
   const { quotes, addQuote, updateQuote, removeQuote, acceptQuote } = useMockState();
+  const { push } = useToast();
+  const router = useRouter();
   const customers = getCustomers();
   const aircraft = getAircraft();
   const parts = getParts();
@@ -122,9 +128,22 @@ export default function QuotesPage() {
                   <td className="px-3 py-2">{t.total.toFixed(2)}</td>
                   <td className="px-3 py-2 space-x-2">
                     <button className="text-blue-600 underline" onClick={() => openEdit(q)}>Éditer</button>
-                    <button className="text-blue-600 underline" onClick={() => printable(q)}>PDF</button>
+                    <button className="text-blue-600 underline" onClick={() => openPrint(buildQuoteHtml(q))}>PDF</button>
                     {q.status !== "accepted" && (
-                      <button className="text-green-600 underline" onClick={() => acceptQuote(q.id)}>Accepter</button>
+                      <button
+                        className="text-green-600 underline"
+                        onClick={() => {
+                          try {
+                            const { woId } = acceptQuote(q.id);
+                            push({ type: "success", title: "Devis accepté", message: `WO créé: ${woId}` });
+                            router.push(`/workorders/${woId}`);
+                          } catch (e: any) {
+                            push({ type: "error", title: "Erreur", message: e?.message ?? "Impossible d'accepter le devis" });
+                          }
+                        }}
+                      >
+                        Accepter
+                      </button>
                     )}
                     <button className="text-red-600 underline" onClick={() => removeQuote(q.id)}>Suppr</button>
                   </td>
@@ -273,4 +292,3 @@ function EditQuoteModal({
     </div>
   );
 }
-

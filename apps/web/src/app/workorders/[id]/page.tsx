@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useMockState } from "@/store/mockState";
 import { getAircraft, getParts, getSuppliers, getCustomers } from "@/lib/mock";
@@ -14,7 +15,7 @@ export default function WorkOrderDetailPage() {
   const router = useRouter();
   const { push } = useToast();
 
-  const { workorders, toggleTaskDone, setWoStatus, computeMissingForTask, movements } = useMockState();
+  const { workorders, toggleTaskDone, setWoStatus, computeMissingForTask, movements, toggleTaskTimer, addTaskHours, setTaskRate, addAttachment, removeAttachment } = useMockState();
   const wo = workorders.find((w) => w.id === id);
 
   const parts = getParts();
@@ -59,6 +60,42 @@ export default function WorkOrderDetailPage() {
   );
 
   const tasksDone = wo.tasks.filter((t) => t.done).length;
+
+  const labor = useMemo(() => {
+    let hours = 0, cost = 0;
+    for (const t of wo.tasks) {
+      const h = t.hours ?? 0;
+      const r = t.rate ?? 95;
+      hours += h;
+      cost += h * r;
+    }
+    return { hours, cost };
+  }, [wo.tasks]);
+
+  function MockUpload({ onUpload }: { onUpload: (url: string, kind: "photo"|"doc") => void }) {
+    return (
+      <div className="flex gap-2">
+        <button
+          className="px-3 py-1 border rounded hover:bg-gray-50 text-sm"
+          onClick={() => {
+            const url = `https://picsum.photos/seed/${Math.random().toString(36).slice(2)}/600/400`;
+            onUpload(url, "photo");
+          }}
+        >
+          + Photo
+        </button>
+        <button
+          className="px-3 py-1 border rounded hover:bg-gray-50 text-sm"
+          onClick={() => {
+            const url = "https://example.com/documents/rapport.pdf";
+            onUpload(url, "doc");
+          }}
+        >
+          + Document
+        </button>
+      </div>
+    );
+  }
 
   function buildPOmailto(partId: string, qtyWanted: number) {
     const p = parts.find((x) => x.id === partId);
@@ -135,6 +172,8 @@ GarageFlow Aviation`
               <th className="px-3 py-2 text-left">Qté</th>
               <th className="px-3 py-2 text-left">Dispo (min)</th>
               <th className="px-3 py-2 text-left">Note</th>
+              <th className="px-3 py-2 text-left">Heures</th>
+              <th className="px-3 py-2 text-left">€/h</th>
               <th className="px-3 py-2 text-left">Actions</th>
             </tr>
           </thead>
@@ -176,6 +215,40 @@ GarageFlow Aviation`
                       />
                     </td>
                     <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          className={`px-2 py-0.5 text-xs rounded border ${t.running ? "bg-green-50" : "hover:bg-gray-50"}`}
+                          onClick={() => {
+                            toggleTaskTimer(wo.id, t.id);
+                            push({ type: "info", message: t.running ? "Timer arrêté" : "Timer démarré" });
+                          }}
+                        >
+                          {t.running ? "Stop" : "Start"}
+                        </button>
+                        <button
+                          className="px-2 py-0.5 text-xs rounded border hover:bg-gray-50"
+                          onClick={() => addTaskHours(wo.id, t.id, 0.25)}
+                          title="+15 min"
+                        >
+                          +0.25h
+                        </button>
+                        <input
+                          type="number"
+                          className="border rounded px-2 py-1 text-sm w-20"
+                          value={t.hours ?? 0}
+                          onChange={(e) => addTaskHours(wo.id, t.id, Number(e.target.value) - (t.hours ?? 0))}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        type="number"
+                        className="border rounded px-2 py-1 text-sm w-20"
+                        value={t.rate ?? 95}
+                        onChange={(e) => setTaskRate(wo.id, t.id, Number(e.target.value))}
+                      />
+                    </td>
+                    <td className="px-3 py-2">
                       {miss.missing > 0 && p && (
                         <a className="text-blue-600 underline" href={buildPOmailto(p.id, Math.max(miss.missing, p.minQty ?? 1))}>
                           Commander ({miss.missing})
@@ -188,6 +261,50 @@ GarageFlow Aviation`
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* RISK BANNER */}
+      {(partsSummary.some((p) => p.missing > 0) || (plane?.nextDue?.dueAtHours && plane?.hours && (plane as any).nextDue.dueAtHours - (plane as any).hours < 50)) && (
+        <div className="border border-yellow-300 bg-yellow-50 text-yellow-900 px-3 py-2 rounded">
+          <b>Risques:</b>
+          {partsSummary.some((p) => p.missing > 0) && <span className="ml-2">• Pièces manquantes à commander</span>}
+          {(plane?.nextDue?.dueAtHours && plane?.hours && (plane as any).nextDue.dueAtHours - (plane as any).hours < 50) && (
+            <span className="ml-2">• Inspection avion bientôt due ({Math.max(0, (plane as any).nextDue.dueAtHours - (plane as any).hours).toFixed(0)} h)</span>
+          )}
+        </div>
+      )}
+
+      {/* Attachments */}
+      <div>
+        <h3 className="font-medium mb-2">Pièces jointes</h3>
+        <div className="flex gap-2 mb-2">
+          <MockUpload
+            onUpload={(fileUrl, kind) => {
+              addAttachment(wo.id, { url: fileUrl, kind, label: kind === "photo" ? "Photo atelier" : "Document" });
+              push({ type: "success", message: "Pièce jointe ajoutée" });
+            }}
+          />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {(wo.attachments ?? []).length === 0 ? (
+            <div className="text-sm text-gray-500">Aucune pièce jointe</div>
+          ) : (
+            (wo.attachments ?? []).map((att) => (
+              <div key={att.id} className="border rounded p-2">
+                {att.kind === "photo" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img alt={att.label ?? "photo"} src={att.url} className="w-full h-32 object-cover rounded" />
+                ) : (
+                  <a href={att.url} target="_blank" className="underline">{att.label ?? "Document"}</a>
+                )}
+                <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+                  <span>{att.kind}</span>
+                  <button className="underline" onClick={() => removeAttachment(wo.id, att.id)}>Supprimer</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Résumé pièces */}
@@ -261,7 +378,7 @@ GarageFlow Aviation`
 
       {/* Footer mini résumé */}
       <div className="text-sm text-gray-600">
-        Tâches terminées: <b>{tasksDone}/{wo.tasks.length}</b>
+        Tâches terminées: <b>{tasksDone}/{wo.tasks.length}</b> • MO: <b>{labor.hours.toFixed(2)} h</b> (~ <b>{labor.cost.toFixed(2)} €</b>)
       </div>
     </section>
   );
