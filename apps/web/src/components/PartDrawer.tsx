@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { getSuppliers } from "@/lib/mock";
-import { listMovementsFor } from "@/lib/movementStore";
+import { listMovementsFor, clearFor as clearMovementsFor } from "@/lib/movementStore";
+import { getReservedFor, setReservedFor } from "@/lib/reservedStore";
 import { StockMoveForm } from "@/components/StockMoveForm";
 
 type Part = {
@@ -27,10 +28,14 @@ export function PartDrawer({
   part,
   onClose,
   onMovement,
+  onReservedChange,
+  onMovementsReset,
 }: {
   part: Part | null;
   onClose: () => void;
   onMovement?: (delta: number, reason: string, fileName?: string) => void;
+  onReservedChange?: (key: string, qty: number) => void;
+  onMovementsReset?: (key: string) => void;
 }) {
   useEffect(() => {
     function esc(e: KeyboardEvent) {
@@ -47,6 +52,12 @@ export function PartDrawer({
     const list = getSuppliers() as any[];
     return list.find((s) => s.name?.toLowerCase() === part.supplier?.toLowerCase());
   }, [part]);
+  const key = String(part?.sku || part?.id || "");
+  const [reserved, setReserved] = useState<number>(0);
+  useEffect(() => {
+    if (!key) return;
+    setReserved(getReservedFor(key));
+  }, [key]);
   return (
     <div
       className={`fixed inset-0 z-50 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
@@ -88,8 +99,28 @@ export function PartDrawer({
               <Field label="Catégorie" value={part.category} />
               <Field label="Certificat" value={part.cert} />
               <Field label="Qté" value={String(part.qty ?? "")} />
-              <Field label="Réservé" value={String(part.reservedQty ?? 0)} />
-              <Field label="Disponible" value={String((part.qty ?? 0) - (part.reservedQty ?? 0))} />
+              <div>
+                <div className="text-xs text-gray-500">Réservé</div>
+                <div>
+                  <input
+                    type="number"
+                    min={0}
+                    value={reserved}
+                    onChange={(e) => setReserved(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-28 rounded-md border px-2 py-1 text-sm"
+                  />
+                  <button
+                    onClick={() => {
+                      setReservedFor(key, reserved);
+                      onReservedChange?.(key, reserved);
+                    }}
+                    className="ml-2 rounded-md bg-slate-800 px-2 py-1 text-xs text-white hover:bg-slate-700"
+                  >
+                    Enregistrer
+                  </button>
+                </div>
+              </div>
+              <Field label="Disponible" value={String((part.qty ?? 0) - reserved)} />
               <Field label="Seuil Min" value={String(part.minQty ?? "")} />
               <Field label="Coût unitaire (CAD)" value={part.unitCost?.toString()} />
               <Field label="Emplacement" value={part.location} />
@@ -134,6 +165,24 @@ export function PartDrawer({
                   ))}
                 </ul>
               )}
+              <div className="pt-2 text-right">
+                <button
+                  onClick={() => {
+                    // clear LS for this key
+                    try {
+                      const raw = localStorage.getItem("gf_movements");
+                      const arr = raw ? JSON.parse(raw) : [];
+                      const filtered = arr.filter((m: any) => (m.sku || m.id) !== key);
+                      localStorage.setItem("gf_movements", JSON.stringify(filtered));
+                    } catch {}
+                    clearMovementsFor(key);
+                    onMovementsReset?.(key);
+                  }}
+                  className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200"
+                >
+                  Reset mouvements
+                </button>
+              </div>
             </div>
           </div>
         )}

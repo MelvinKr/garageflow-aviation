@@ -23,3 +23,14 @@ export function listMovementsFor(key?: string) {
     .slice(0, 20);
 }
 
+export function clearFor(key?: string) {
+  if (!key) return;
+  for (let i = movements.length - 1; i >= 0; i--) {
+    const k = movements[i].sku || movements[i].id;
+    if (k === key) movements.splice(i, 1);
+  }
+}
+
+export function clearAll() {
+  movements.splice(0, movements.length);
+}

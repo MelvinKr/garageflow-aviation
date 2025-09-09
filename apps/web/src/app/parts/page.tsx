@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getParts } from "@/lib/mock";
 import { DataTable } from "@/components/DataTable";
 import type { Sorter } from "@/components/DataTable";
+import { getReservedMap, setReservedFor } from "@/lib/reservedStore";
 import { PartDrawer } from "@/components/PartDrawer";
 
 type Row = ReturnType<typeof getParts>[number] & { sku?: string };
@@ -11,6 +12,7 @@ type Row = ReturnType<typeof getParts>[number] & { sku?: string };
 export default function PartsPage() {
   const all = getParts() as Row[];
   const [deltas, setDeltas] = useState<Record<string, number>>({});
+  const [reservedMap, setReservedMap] = useState<Record<string, number>>({});
   const router = useRouter();
   const search = useSearchParams();
   const pathname = usePathname();
@@ -38,6 +40,13 @@ export default function PartsPage() {
         agg[key] = (agg[key] || 0) + (Number(m.delta) || 0);
       }
       setDeltas(agg);
+    } catch {}
+  }, []);
+
+  // Load reserved map once
+  useEffect(() => {
+    try {
+      setReservedMap(getReservedMap());
     } catch {}
   }, []);
 
@@ -91,12 +100,14 @@ export default function PartsPage() {
       return matchQ && matchCat && matchCert;
     });
     // apply effective quantity with local deltas
-    const withQty = filtered.map((p) => ({
-      ...p,
-      qty: (p.qty ?? 0) + (deltas[p.sku || p.id] || 0),
-    }));
+    const withQty = filtered.map((p) => {
+      const key = p.sku || p.id;
+      const eff = (p.qty ?? 0) + (deltas[key] || 0);
+      const res = reservedMap[key] ?? p.reservedQty ?? 0;
+      return { ...p, qty: eff - res };
+    });
     return onlyLow ? withQty.filter((p) => (p.qty ?? 0) <= (p.minQty ?? 0)) : withQty;
-  }, [all, q, cat, cert, deltas, onlyLow]);
+  }, [all, q, cat, cert, deltas, reservedMap, onlyLow]);
 
   const low = (qty: number, min: number) => (qty <= min ? <span className="text-red-600 font-medium">{qty}</span> : qty);
 
@@ -157,6 +168,17 @@ export default function PartsPage() {
         >
           Exporter CSV
         </button>
+        <button
+          onClick={() => {
+            try {
+              localStorage.removeItem("gf_movements");
+            } catch {}
+            setDeltas({});
+          }}
+          className="rounded-md bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-gray-200 hover:bg-gray-50"
+        >
+          Reset mouvements
+        </button>
       </div>
 
       <DataTable
@@ -203,6 +225,26 @@ export default function PartsPage() {
             arr.push({ sku: selected.sku, id: selected.id, delta, reason, fileName, at: new Date().toISOString() });
             localStorage.setItem("gf_movements", JSON.stringify(arr));
           } catch {}
+        }}
+        onReservedChange={(key, qty) => {
+          setReservedFor(key, qty);
+          setReservedMap((prev) => ({ ...prev, [key]: qty }));
+        }}
+        onMovementsReset={(key) => {
+          // recompute deltas from LS
+          try {
+            const raw = localStorage.getItem("gf_movements");
+            const arr: { sku?: string; id?: string; delta: number }[] = raw ? JSON.parse(raw) : [];
+            const agg: Record<string, number> = {};
+            for (const m of arr) {
+              const k = m.sku || m.id;
+              if (!k) continue;
+              agg[k] = (agg[k] || 0) + (Number(m.delta) || 0);
+            }
+            setDeltas(agg);
+          } catch {
+            setDeltas({});
+          }
         }}
       />
     </section>

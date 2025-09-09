@@ -22,10 +22,12 @@
 ### Inventaire (Phase 1)
 - Filtres: recherche (nom/SKU), catégorie, certificat, et filtre rapide "Bas stock".
 - Tri multi-colonnes (Shift-clic) avec indicateurs de priorité.
-- Drawer de détail pièce avec formulaire "Mouvement stock" (±, motif, pièce jointe mock) et historique local.
+- Drawer de détail pièce: certificat, traçabilité (batch/série/péremption), compat, fournisseur (lookup), réservé éditable, disponible calculé.
+- Mouvement stock: formulaire (±, motif, note, attachement mock), règle anti-négatif, historique local (localStorage + mémoire).
 - Quantité effective = quantité mock + mouvements locaux (persistés dans localStorage).
 - Export CSV de la liste filtrée/triée.
 - Totaux: nombre d’articles, quantité totale et valeur stock (CAD).
+- Dashboard: widget "À commander" (top 5 sous seuil) avec lien vers /parts?low=1.
 
 ### UI
 - Sidebar sombre avec icônes et état actif.
