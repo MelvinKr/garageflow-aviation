@@ -85,9 +85,4 @@ L’application sera dispo sur 👉 http://localhost:3000
 
 ## 📄 Licence
 
-Projet interne démo — non destiné à un usage en production.
-
----
-
-👉 Ça va rendre ton repo **pro et attractif** sur GitHub.  
-Veux-tu que je te propose aussi un **badge "Live Demo"** (avec Vercel) si tu déploies l’app pour montrer le résultat direct ?
+Projet interne démo
