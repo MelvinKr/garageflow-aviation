@@ -73,15 +73,76 @@ L’application sera dispo sur 👉 http://localhost:3000
 
 ---
 
-## 🛣️ Roadmap
+## 🛣️ Avancement Roadmap (Septembre 2025 – Mise à jour)
 
-- [x] Phase 0 — Socle & DX (Turborepo, layout/nav, CI lint+typecheck+build)
-- [x] Phase 1 — Inventaire (liste, filtres, tri multi, drawer, mouvements locaux, export, totaux)
-- [ ] Phase 2 — Avions & Clients (fiches détaillées, recherche avancée)
-- [ ] Phase 3 — Devis (workflow brouillon → envoyé → accepté, calcul TVA, PDF)
-- [ ] Phase 4 — Work Orders (tâches, pièces consommées, clôture, rapports)
-- [ ] Phase 5 — Sync offline (Dexie sync) et DB cloud (Supabase/Drizzle)
-- [ ] Phase 6 — IA (assistance notes WO, prévisions stock)
+### ✅ Phase 0 – Socle & DX (terminée)
+- Monorepo Turborepo + workspaces OK
+- Next.js 15 + Tailwind configurés
+- Composants communs (`DataTable`, `StatCard`)
+- Jeux de données mock enrichis
+- Dashboard avec KPIs basiques
+
+### 🔶 Phase 1 – Inventaire (en cours, ~70%)
+- [x] Liste pièces + filtres, badges low-stock
+- [x] Widget Dashboard “À commander”
+- [x] Drawer détail pièce (édition inline, certificat, photo, commande fournisseur)
+- [ ] Historique des mouvements stock (entrées/sorties mockées)
+- [ ] Réservation liée aux devis/WO (sera finalisée en phase 3)
+
+### ⏳ Phase 2 – Avions & Clients/Fournisseurs (à démarrer)
+- [ ] Liste avions (immat, type, heures, maintenances dues)
+- [ ] Drawer avion (timeline interventions + devis/WO liés)
+- [ ] Liste clients (coordonnées, appareils liés)
+- [ ] Liste fournisseurs (coordonnées, pièces associées)
+
+### ⏳ Phase 3 – Devis & Work Orders (non implémenté)
+- [ ] Création devis (pièces + MO + remise + taxes)
+- [ ] Calculs auto des totaux
+- [ ] Acceptation → génération WO lié
+- [ ] Réservation auto de pièces à l’acceptation
+- [ ] Consommation de pièces à la complétion d’une tâche
+- [ ] Export PDF de devis et WO
+
+### ⏳ Phase 4 – DB Cloud (Supabase/Drizzle)
+- [ ] Schéma Drizzle + migrations
+- [ ] Seed initial depuis les mocks
+- [ ] Auth Supabase (email/password)
+- [ ] API sécurisées `/api/parts`, `/api/quotes`, `/api/workorders`
+- [ ] Repository toggle (mock | db)
+
+### ⏳ Phase 5 – Offline-first
+- [ ] PWA manifest + service worker
+- [ ] IndexedDB local (parts, quotes, workorders)
+- [ ] Queue d’actions offline (create/update)
+- [ ] Synchronisation automatique au retour réseau
+- [ ] UI status (Offline, Syncing, Conflit)
+
+### ⏳ Phase 6 – Fiches de révision automatiques
+- [ ] Templates par type d’avion (50h/100h/annuelle)
+- [ ] Génération WO prérempli depuis template
+- [ ] Réservation pièces auto
+- [ ] Export PDF révision + signatures
+
+### ⏳ Phase 7 – Rapports & Prévisions (IA lite)
+- [ ] Rapports stock (valeur, ruptures, rotation)
+- [ ] Rapports devis (conversion, délais)
+- [ ] Rapports WO (temps moyen, top pièces)
+- [ ] Prévisions (EMA → seuils dynamiques, cashflow)
+- [ ] Dashboard graphique interactif
+- [ ] Export XLSX/PDF
+
+### ⏳ Phase 8 – Polish UX/Perf/Sécu
+- [ ] Empty states, skeletons, toasts, raccourcis clavier
+- [ ] Accessibilité (contrast, roles ARIA, navigation clavier)
+- [ ] Performance (pagination, virtualisation tables)
+- [ ] Sécurité (RLS Supabase, audit logs mouvements)
+- [ ] Observabilité (logs, Sentry, métriques)
+
+---
+
+**Décision GO/NOGO (Septembre 2025) :**
+- 🟢 **GO interne** → base stable, inventaire fonctionnel en démo.  
+- 🔴 **NOGO client** → bloquant tant que les phases 2 & 3 ne sont pas implémentées.
 
 ---
 
