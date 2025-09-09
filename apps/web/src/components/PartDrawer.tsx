@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useMemo, useState } from "react";
 import { useMockState, mockUpload, Part as MockPart } from "@/store/mockState";
 import suppliers from "@/mock/suppliers.json";
@@ -36,14 +36,14 @@ function InlineField({
         <div
           className={`min-h-[24px] ${onChange ? "cursor-pointer hover:underline" : ""}`}
           onClick={() => onChange && setEditing(true)}
-          title={onChange ? "Cliquer pour éditer" : ""}
+          title={onChange ? "Cliquer pour Ã©diter" : ""}
         >
           {type === "link" && value ? (
             <a href={String(value)} target="_blank" className="text-blue-600 underline">
               {value}
             </a>
           ) : (
-            (value ?? "—").toString()
+            (value ?? "â€”").toString()
           )}
         </div>
       ) : type === "select" && options ? (
@@ -102,9 +102,9 @@ export function PartDrawer({ id, onClose }: Props) {
 
   function buildMailTo(p: MockPart) {
     const email = supplier?.email ?? "orders@example.com";
-    const subject = encodeURIComponent(`Commande ${p.sku} – ${p.name}`);
+    const subject = encodeURIComponent(`Commande ${p.sku} â€“ ${p.name}`);
     const suggest = Math.max(min * 2 - dispo, min - dispo + 1, 1);
-    const body = encodeURIComponent(`Bonjour,\n\nMerci de nous confirmer la dispo et le délai sur l’article:\n- SKU: ${p.sku}\n- Nom: ${p.name}\n- Certification: ${p.cert ?? "-"}\n- Quantité souhaitée: ${suggest}\n\nAdresse de livraison: [votre adresse]\nConditions: [NET30 / DUE_ON_RECEIPT]\nRéf. interne: ${p.id}\n\nCordialement,\nGarageFlow Aviation`);
+    const body = encodeURIComponent(`Bonjour,\n\nMerci de nous confirmer la dispo et le dÃ©lai sur lâ€™article:\n- SKU: ${p.sku}\n- Nom: ${p.name}\n- Certification: ${p.cert ?? "-"}\n- QuantitÃ© souhaitÃ©e: ${suggest}\n\nAdresse de livraison: [votre adresse]\nConditions: [NET30 / DUE_ON_RECEIPT]\nRÃ©f. interne: ${p.id}\n\nCordialement,\nGarageFlow Aviation`);
     return `mailto:${email}?subject=${subject}&body=${body}`;
   }
 
@@ -128,7 +128,7 @@ export function PartDrawer({ id, onClose }: Props) {
   function addInlineMovement() {
     const qty = Math.abs(Number(mvQty) || 0);
     if (qty <= 0) {
-      setMvErr("Quantité invalide");
+      setMvErr("QuantitÃ© invalide");
       setTimeout(() => setMvErr(""), 2000);
       return;
     }
@@ -146,7 +146,7 @@ export function PartDrawer({ id, onClose }: Props) {
   return (
     <div className="fixed right-0 top-0 z-50 h-full w-[460px] overflow-y-auto border-l bg-white p-6 shadow-xl">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Détails pièce</h2>
+        <h2 className="text-lg font-semibold">DÃ©tails piÃ¨ce</h2>
         <button onClick={onClose} className="text-sm underline">
           Fermer
         </button>
@@ -168,22 +168,22 @@ export function PartDrawer({ id, onClose }: Props) {
             className="hidden"
             onChange={(e) => onPhotoChoose(e.target.files?.[0] || undefined)}
           />
-          <span className="rounded border px-3 py-1 hover:bg-gray-50">{uploading ? "Téléversement..." : "Joindre/Changer photo"}</span>
+          <span className="rounded border px-3 py-1 hover:bg-gray-50">{uploading ? "TÃ©lÃ©versement..." : "Joindre/Changer photo"}</span>
         </label>
       </div>
 
-      {/* Champs éditables inline */}
+      {/* Champs Ã©ditables inline */}
       <div className="space-y-3">
-        <InlineField label="Réf / SKU" value={`${part.id} — ${part.sku}`} />
+        <InlineField label="RÃ©f / SKU" value={`${part.id} â€” ${part.sku}`} />
         <InlineField label="Nom" value={part.name} onChange={(v) => updatePart(part.id, { name: v } as any)} />
-        <InlineField label="Catégorie" value={part.category} onChange={(v) => updatePart(part.id, { category: v } as any)} />
+        <InlineField label="CatÃ©gorie" value={part.category} onChange={(v) => updatePart(part.id, { category: v } as any)} />
         <InlineField label="Certificat" value={part.cert} onChange={(v) => updatePart(part.id, { cert: v } as any)} />
         <InlineField
           label="Lien certificat"
           value={(part as any).certUrl}
           onChange={(v) => updatePart(part.id, { certUrl: v } as any)}
           type="link"
-          placeholder="https://… (pdf/url)"
+          placeholder="https://â€¦ (pdf/url)"
         />
         <InlineField
           label="Fournisseur"
@@ -193,10 +193,10 @@ export function PartDrawer({ id, onClose }: Props) {
           options={supplierOptions}
         />
         <InlineField label="Emplacement" value={part.location} onChange={(v) => updatePart(part.id, { location: v } as any)} />
-        <InlineField label="Quantité" value={part.qty} onChange={(v) => updatePart(part.id, { qty: Number(v) } as any)} type="number" />
-        <InlineField label="Réservée" value={(part as any).reservedQty ?? 0} onChange={(v) => updatePart(part.id, { reservedQty: Number(v) } as any)} type="number" />
+        <InlineField label="QuantitÃ©" value={part.qty} onChange={(v) => updatePart(part.id, { qty: Number(v) } as any)} type="number" />
+        <InlineField label="RÃ©servÃ©e" value={(part as any).reservedQty ?? 0} onChange={(v) => updatePart(part.id, { reservedQty: Number(v) } as any)} type="number" />
         <InlineField label="Min" value={part.minQty} onChange={(v) => updatePart(part.id, { minQty: Number(v) } as any)} type="number" />
-        <InlineField label="Coût unitaire" value={part.unitCost} onChange={(v) => updatePart(part.id, { unitCost: Number(v) } as any)} type="number" />
+        <InlineField label="CoÃ»t unitaire" value={part.unitCost} onChange={(v) => updatePart(part.id, { unitCost: Number(v) } as any)} type="number" />
       </div>
 
       {/* Statut stock */}
@@ -229,8 +229,8 @@ export function PartDrawer({ id, onClose }: Props) {
         {mvErr && <div className="mb-2 rounded bg-red-50 px-2 py-1 text-xs text-red-700">{mvErr}</div>}
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <select className="rounded border px-2 py-1" value={mvType} onChange={(e) => setMvType(e.target.value as any)}>
-            <option value="IN">Entrée (+)</option>
-            <option value="OUT">Sortie (−)</option>
+            <option value="IN">EntrÃ©e (+)</option>
+            <option value="OUT">Sortie (âˆ’)</option>
           </select>
           <input
             type="number"
@@ -241,7 +241,7 @@ export function PartDrawer({ id, onClose }: Props) {
           />
           <input
             type="text"
-            placeholder="Motif (ex: utilisé sur WO-123)"
+            placeholder="Motif (ex: utilisÃ© sur WO-123)"
             value={mvReason}
             onChange={(e) => setMvReason(e.target.value)}
             className="min-w-[240px] flex-1 rounded border px-2 py-1"
@@ -256,7 +256,7 @@ export function PartDrawer({ id, onClose }: Props) {
       <div className="mt-6">
         <div className="mb-2 text-sm font-medium">Historique des mouvements</div>
         {history.length === 0 ? (
-          <div className="text-xs text-gray-500">Aucun mouvement enregistré.</div>
+          <div className="text-xs text-gray-500">Aucun mouvement enregistrÃ©.</div>
         ) : (
           <div className="overflow-hidden rounded-lg border">
             <table className="min-w-full text-sm">
@@ -264,7 +264,7 @@ export function PartDrawer({ id, onClose }: Props) {
                 <tr>
                   <th className="px-3 py-2">Date</th>
                   <th className="px-3 py-2">Type</th>
-                  <th className="px-3 py-2">Qté</th>
+                  <th className="px-3 py-2">QtÃ©</th>
                   <th className="px-3 py-2">Motif</th>
                 </tr>
               </thead>
@@ -274,7 +274,7 @@ export function PartDrawer({ id, onClose }: Props) {
                     <td className="px-3 py-2 text-gray-600">{new Date(m.date).toLocaleString()}</td>
                     <td className="px-3 py-2">{m.type}</td>
                     <td className="px-3 py-2">{m.type === "IN" ? "+" : "-"}{m.qty}</td>
-                    <td className="px-3 py-2 text-gray-700">{m.reason ?? "—"}</td>
+                    <td className="px-3 py-2 text-gray-700">{m.reason ?? "â€”"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -312,8 +312,8 @@ function StockMovementForm({
           value={type}
           onChange={(e) => setType(e.target.value as any)}
         >
-          <option value="IN">Entrée (+)</option>
-          <option value="OUT">Sortie (−)</option>
+          <option value="IN">EntrÃ©e (+)</option>
+          <option value="OUT">Sortie (âˆ’)</option>
         </select>
         <input
           type="number"
@@ -324,7 +324,7 @@ function StockMovementForm({
         />
       </div>
       <input
-        placeholder="Motif (ex: réception fournisseur, consommation WO)"
+        placeholder="Motif (ex: rÃ©ception fournisseur, consommation WO)"
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         className="w-full rounded-md border px-3 py-2"
@@ -335,7 +335,7 @@ function StockMovementForm({
           onChange={(e) => setFileName(e.target.files?.[0]?.name)}
           className="text-sm"
         />
-        {fileName && <div className="text-xs text-gray-500 mt-1">Pièce jointe: {fileName}</div>}
+        {fileName && <div className="text-xs text-gray-500 mt-1">PiÃ¨ce jointe: {fileName}</div>}
       </div>
       <div className="pt-1">
         <button type="submit" className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-white hover:bg-blue-700">
@@ -389,10 +389,10 @@ export function PartDrawer({ id, onClose }: Props) {
 
   function buildMailTo() {
     const email = supplier?.email ?? "orders@example.com";
-    const subject = encodeURIComponent(`Commande ${draft.sku} – ${draft.name}`);
+    const subject = encodeURIComponent(`Commande ${draft.sku} â€“ ${draft.name}`);
     const suggest = Math.max(min * 2 - dispo, min - dispo + 1, 1);
     const body = encodeURIComponent(
-      `Bonjour,\n\nMerci de nous confirmer la dispo et le délai sur l’article:\n- SKU: ${draft.sku}\n- Nom: ${draft.name}\n- Certification: ${(draft as any).cert ?? "-"}\n- Quantité souhaitée: ${suggest}\n\nAdresse de livraison: [votre adresse]\nConditions: [NET30 / DUE_ON_RECEIPT]\nRéf. interne: ${draft.id}\n\nCordialement,\nGarageFlow Aviation`
+      `Bonjour,\n\nMerci de nous confirmer la dispo et le dÃ©lai sur lâ€™article:\n- SKU: ${draft.sku}\n- Nom: ${draft.name}\n- Certification: ${(draft as any).cert ?? "-"}\n- QuantitÃ© souhaitÃ©e: ${suggest}\n\nAdresse de livraison: [votre adresse]\nConditions: [NET30 / DUE_ON_RECEIPT]\nRÃ©f. interne: ${draft.id}\n\nCordialement,\nGarageFlow Aviation`
     );
     return `mailto:${email}?subject=${subject}&body=${body}`;
   }
@@ -426,7 +426,7 @@ export function PartDrawer({ id, onClose }: Props) {
   return (
     <div className="fixed right-0 top-0 h-full w-[520px] overflow-y-auto border-l bg-white p-6 shadow-xl">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Détails pièce</h2>
+        <h2 className="text-lg font-semibold">DÃ©tails piÃ¨ce</h2>
         <button onClick={onClose} className="text-sm underline">
           Fermer
         </button>
@@ -443,21 +443,21 @@ export function PartDrawer({ id, onClose }: Props) {
         )}
         <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-sm">
           <input type="file" accept="image/*" className="hidden" onChange={(e) => onPhotoChoose(e.target.files?.[0])} />
-          <span className="rounded border px-3 py-1 hover:bg-gray-50">{uploading ? "Téléversement..." : "Joindre/Changer photo"}</span>
+          <span className="rounded border px-3 py-1 hover:bg-gray-50">{uploading ? "TÃ©lÃ©versement..." : "Joindre/Changer photo"}</span>
         </label>
       </div>
 
       {/* Champs (brouillon) */}
       <div className="grid grid-cols-2 gap-3">
-        <Labeled label="Réf / SKU">
+        <Labeled label="RÃ©f / SKU">
           <div className="text-sm">
-            {draft.id} — {draft.sku}
+            {draft.id} â€” {draft.sku}
           </div>
         </Labeled>
         <Labeled label="Nom">
           <input className="rounded border px-2 py-1" value={String(draft.name ?? "")} onChange={(e) => set("name", e.target.value as any)} />
         </Labeled>
-        <Labeled label="Catégorie">
+        <Labeled label="CatÃ©gorie">
           <input className="rounded border px-2 py-1" value={String(draft.category ?? "")} onChange={(e) => set("category", e.target.value as any)} />
         </Labeled>
         <Labeled label="Certificat">
@@ -478,16 +478,16 @@ export function PartDrawer({ id, onClose }: Props) {
         <Labeled label="Emplacement">
           <input className="rounded border px-2 py-1" value={String(draft.location ?? "")} onChange={(e) => set("location", e.target.value as any)} />
         </Labeled>
-        <Labeled label="Quantité">
+        <Labeled label="QuantitÃ©">
           <input type="number" className="rounded border px-2 py-1" value={qty} onChange={(e) => set("qty", Number(e.target.value) as any)} />
         </Labeled>
-        <Labeled label="Réservée">
+        <Labeled label="RÃ©servÃ©e">
           <input type="number" className="rounded border px-2 py-1" value={reserved} onChange={(e) => set("reservedQty", Number(e.target.value) as any)} />
         </Labeled>
         <Labeled label="Min">
           <input type="number" className="rounded border px-2 py-1" value={min} onChange={(e) => set("minQty", Number(e.target.value) as any)} />
         </Labeled>
-        <Labeled label="Coût unitaire (CAD)">
+        <Labeled label="CoÃ»t unitaire (CAD)">
           <input type="number" className="rounded border px-2 py-1" value={Number(draft.unitCost ?? 0)} onChange={(e) => set("unitCost", Number(e.target.value) as any)} />
         </Labeled>
       </div>
