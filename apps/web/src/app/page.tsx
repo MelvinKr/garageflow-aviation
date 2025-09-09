@@ -54,6 +54,9 @@ export default function Page() {
   }, [effectiveParts]);
 
   const currency = (n: number) => `${n.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+  const effectiveStockValue = useMemo(() => {
+    return effectiveParts.reduce((acc: number, p: any) => acc + Math.max(0, Number(p.qty) || 0) * (Number(p.unitCost) || 0), 0);
+  }, [effectiveParts]);
 
   return (
     <main className="p-8 space-y-8">
@@ -75,7 +78,7 @@ export default function Page() {
         <KpiCard
           icon={<CoinIcon />}
           label="Valeur stock"
-          value={currency(k.totalStockValue)}
+          value={currency(effectiveStockValue)}
           accent="orange"
         />
       </section>
