@@ -33,6 +33,7 @@ export function PartDrawer({
   }, [onClose]);
 
   const open = !!part;
+  const history = useMovements(part);
   return (
     <div
       className={`fixed inset-0 z-50 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
@@ -50,7 +51,12 @@ export function PartDrawer({
         }`}
       >
         <div className="flex items-center justify-between border-b p-4">
-          <div className="font-semibold">Détail pièce</div>
+          <div className="font-semibold inline-flex items-center gap-2">
+            Détail pièce
+            {part && part.qty !== undefined && part.minQty !== undefined && part.qty <= part.minQty && (
+              <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-700">LOW</span>
+            )}
+          </div>
           <button className="text-sm text-gray-500 hover:text-gray-700" onClick={onClose}>
             Fermer
           </button>
@@ -82,6 +88,26 @@ export function PartDrawer({
                 onClose();
               }}
             />
+
+            <div className="pt-2">
+              <div className="mb-2 text-sm font-medium">Historique mouvements</div>
+              {history.length === 0 ? (
+                <div className="text-xs text-gray-500">Aucun mouvement enregistré.</div>
+              ) : (
+                <ul className="max-h-56 overflow-auto divide-y rounded border">
+                  {history.map((m, i) => (
+                    <li key={i} className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                      <span className={m.delta >= 0 ? "text-green-700" : "text-red-700"}>
+                        {m.delta >= 0 ? "+" : ""}
+                        {m.delta}
+                      </span>
+                      <span className="flex-1 text-gray-700">{m.reason || "—"}</span>
+                      <span className="text-gray-400">{new Date(m.at).toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         )}
       </aside>
@@ -96,6 +122,27 @@ function Field({ label, value }: { label: string; value?: string }) {
       <div className="font-medium">{value ?? "—"}</div>
     </div>
   );
+}
+
+function useMovements(part: Part | null) {
+  const [items, setItems] = useState<Array<{ delta: number; reason?: string; at: string }>>([]);
+  useEffect(() => {
+    if (!part) return;
+    try {
+      const raw = localStorage.getItem("gf_movements");
+      if (!raw) return setItems([]);
+      const arr: any[] = JSON.parse(raw);
+      const key = part.sku || part.id;
+      const filtered = arr
+        .filter((m) => (m.sku || m.id) === key)
+        .sort((a, b) => (a.at > b.at ? -1 : 1))
+        .slice(0, 50);
+      setItems(filtered);
+    } catch {
+      setItems([]);
+    }
+  }, [part]);
+  return items;
 }
 
 function StockMovementForm({

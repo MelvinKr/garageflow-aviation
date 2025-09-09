@@ -55,7 +55,7 @@ export default function PartsPage() {
     <section className="p-6 space-y-4">
       <h1 className="text-xl font-semibold">Inventaire — Pièces</h1>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -90,13 +90,31 @@ export default function PartsPage() {
             Réinitialiser
           </button>
         )}
+
+        <button
+          onClick={() => exportCsv(rows)}
+          className="ml-auto rounded-md bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-gray-200 hover:bg-gray-50"
+        >
+          Exporter CSV
+        </button>
       </div>
 
       <DataTable
         rows={rows}
         cols={[
           { key: "sku" as keyof Row, label: "SKU" },
-          { key: "name", label: "Nom" },
+          {
+            key: "name",
+            label: "Nom",
+            render: (r: any) => (
+              <span className="inline-flex items-center gap-2">
+                {r.name}
+                {r.qty <= r.minQty && (
+                  <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-700">LOW</span>
+                )}
+              </span>
+            ),
+          },
           { key: "category", label: "Cat." },
           { key: "cert", label: "Certif." },
           { key: "qty", label: "Qté", render: (r: any) => low(r.qty, r.minQty) },
@@ -124,4 +142,27 @@ export default function PartsPage() {
       />
     </section>
   );
+}
+
+function exportCsv(rows: any[]) {
+  const headers = ["sku", "name", "category", "cert", "qty", "minQty", "unitCost", "location"];
+  const esc = (v: any) => {
+    const s = String(v ?? "");
+    if (s.includes(";") || s.includes("\n") || s.includes("\"")) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  };
+  const lines = [headers.join(";")].concat(
+    rows.map((r) => headers.map((h) => esc((r as any)[h])).join(";"))
+  );
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `parts-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
