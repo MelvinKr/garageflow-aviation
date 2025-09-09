@@ -57,6 +57,15 @@ export default function WorkOrdersPage() {
               {k === "all" ? "Tous" : k.replace("_", " ")}
             </button>
           ))}
+          <button
+            className="ml-3 px-3 py-1 border rounded text-sm hover:bg-gray-50"
+            onClick={() => {
+              const data = rows.map((r: any) => ({ id: r.id, aircraft: r.aircraftLabel, status: r.status, progress: `${r.progress}%` }));
+              downloadCSV("workorders.csv", toCSV(data));
+            }}
+          >
+            Export CSV
+          </button>
         </div>
       </div>
 

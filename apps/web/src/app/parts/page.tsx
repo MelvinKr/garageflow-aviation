@@ -1,5 +1,7 @@
 import { getParts } from "@/lib/mock";
 import PartsClient from "./PartsClient";
+import { getParts } from "@/lib/mock";
+import { toCSV, downloadCSV } from "@/lib/csv";
 
 export default function PartsPage({
   searchParams,
@@ -26,6 +28,24 @@ export default function PartsPage({
           <a href="/parts?lowStock=1" className="underline">
             Sous le seuil
           </a>
+          <button
+            className="ml-4 px-3 py-1 border rounded text-sm hover:bg-gray-50"
+            onClick={() => {
+              const data = getParts().map((p: any) => ({
+                id: p.id,
+                sku: p.sku,
+                name: p.name,
+                qty: p.qty,
+                reserved: p.reservedQty ?? 0,
+                min: p.minQty ?? 0,
+                unitCost: p.unitCost ?? 0,
+                location: p.location ?? "",
+              }));
+              downloadCSV("inventaire.csv", toCSV(data));
+            }}
+          >
+            Export CSV
+          </button>
         </nav>
       </div>
 

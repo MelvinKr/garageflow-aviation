@@ -19,7 +19,7 @@ export function SidebarNav() {
     <aside className="w-64 bg-[#1f2a37] text-slate-200 min-h-screen">
       <div className="p-5 text-lg font-semibold tracking-tight">GarageFlow</div>
       <nav className="flex flex-col gap-1 p-3 text-sm">
-        {links.map((item) => {
+        {[...links, { href: "/purchase-orders", label: "PO", icon: <StoreIcon /> }].map((item) => {
           const active = pathname === item.href;
           return (
             <Link

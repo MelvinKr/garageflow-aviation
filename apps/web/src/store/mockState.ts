@@ -94,6 +94,7 @@ type State = {
   quotes: Quote[];
   workorders: WorkOrder[];
   movements: StockMove[];
+  purchaseOrders: PurchaseOrder[];
 
   // primitives inventaire
   updatePart: (id: string, patch: Partial<Part>) => void;
@@ -120,6 +121,25 @@ type State = {
   // attachments
   addAttachment: (woId: string, file: { url: string; kind: "photo"|"doc"; label?: string }) => void;
   removeAttachment: (woId: string, attId: string) => void;
+
+  // purchase orders
+  createPO: (p: Omit<PurchaseOrder, "id" | "createdAt" | "status"> & Partial<Pick<PurchaseOrder, "status">>) => string;
+  addPoItem: (poId: string, item: Omit<PoItem, "id">) => void;
+  updatePO: (poId: string, patch: Partial<PurchaseOrder>) => void;
+  receivePoItem: (poId: string, itemId: string, qtyToReceive: number) => void;
+};
+
+// --- PO Types ---
+export type PoItem = { id: string; partId: string; qty: number; unitCost?: number };
+export type PurchaseOrder = {
+  id: string;
+  supplierId: string;
+  status: "draft" | "ordered" | "partially_received" | "received" | "cancelled";
+  createdAt: string;
+  expectedAt?: string | null;
+  items: PoItem[];
+  refQuoteId?: string | null;
+  refWoId?: string | null;
 };
 
 export const useMockState = create<State>((set, get) => ({
@@ -127,6 +147,7 @@ export const useMockState = create<State>((set, get) => ({
   quotes: (quotesData as Quote[]) ?? [],
   workorders: (workordersData as WorkOrder[]) ?? [],
   movements: [],
+  purchaseOrders: [],
 
   updatePart: (id, patch) =>
     set((s) => ({
@@ -249,6 +270,42 @@ export const useMockState = create<State>((set, get) => ({
     const missing = Math.max(0, Number(task.qty) - avail);
     return { missing, available: avail, min: Number(p.minQty ?? 0) };
   },
+
+  // ------------- Purchase Orders -------------
+  createPO: (po) => {
+    const id = genId("PO");
+    const createdAt = nowISO();
+    const status: PurchaseOrder["status"] = po.status ?? "ordered";
+    set((s) => ({ purchaseOrders: [{ id, createdAt, status, ...po, items: po.items ?? [] } as PurchaseOrder, ...s.purchaseOrders] }));
+    return id;
+  },
+  addPoItem: (poId, item) =>
+    set((s) => ({
+      purchaseOrders: s.purchaseOrders.map((po) => (po.id === poId ? { ...po, items: [{ id: genId("POI"), ...item }, ...po.items] } : po)),
+    })),
+  updatePO: (poId, patch) =>
+    set((s) => ({ purchaseOrders: s.purchaseOrders.map((po) => (po.id === poId ? { ...po, ...patch } : po)) })),
+  receivePoItem: (poId, itemId, qtyToReceive) =>
+    set((s) => {
+      const po = s.purchaseOrders.find((p) => p.id === poId);
+      if (!po) return {};
+      const it = po.items.find((i) => i.id === itemId);
+      if (!it) return {};
+      const qty = Math.max(0, qtyToReceive);
+      const part = s.parts.find((p) => p.id === it.partId);
+      if (part && qty > 0) {
+        part.qty = Number(part.qty ?? 0) + qty;
+        s.movements.unshift({ id: genId("M"), at: nowISO(), type: "IN", qty, partId: part.id, reason: "Réception PO", ref: po.id, by: "system" });
+        const unres = Math.min(qty, Number(part.reservedQty ?? 0));
+        if (unres > 0) {
+          part.reservedQty = Math.max(0, Number(part.reservedQty ?? 0) - unres);
+          s.movements.unshift({ id: genId("M"), at: nowISO(), type: "UNRESERVE", qty: unres, partId: part.id, reason: "Stock reçu", ref: po.id, by: "system" });
+        }
+      }
+      let status: PurchaseOrder["status"] = po.status;
+      status = "partially_received";
+      return { purchaseOrders: s.purchaseOrders.map((p) => (p.id === poId ? { ...po, status } : p)), parts: [...s.parts], movements: [...s.movements] };
+    }),
 
   // ------------- Labor tracking -------------
   toggleTaskTimer: (woId, taskId) =>
