@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getParts } from "@/lib/mock";
 import { DataTable } from "@/components/DataTable";
+import type { Sorter } from "@/components/DataTable";
 import { PartDrawer } from "@/components/PartDrawer";
 
 type Row = ReturnType<typeof getParts>[number] & { sku?: string };
@@ -9,10 +11,15 @@ type Row = ReturnType<typeof getParts>[number] & { sku?: string };
 export default function PartsPage() {
   const all = getParts() as Row[];
   const [deltas, setDeltas] = useState<Record<string, number>>({});
+  const router = useRouter();
+  const search = useSearchParams();
+  const pathname = usePathname();
+
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
   const [cert, setCert] = useState("");
   const [onlyLow, setOnlyLow] = useState(false);
+  const [sorters, setSorters] = useState<Sorter<Row>[]>([]);
   const [selected, setSelected] = useState<Row | null>(null);
 
   const cats = useMemo(() => Array.from(new Set(all.map((p) => p.category).filter(Boolean))) as string[], [all]);
@@ -34,11 +41,51 @@ export default function PartsPage() {
     } catch {}
   }, []);
 
+  // Initialize from URL
+  useEffect(() => {
+    const q0 = search.get("q") ?? "";
+    const cat0 = search.get("cat") ?? "";
+    const cert0 = search.get("cert") ?? "";
+    const low0 = search.get("low") === "1";
+    const sort0 = search.get("sort") ?? "";
+    setQ(q0);
+    setCat(cat0);
+    setCert(cert0);
+    setOnlyLow(low0);
+    if (sort0) {
+      const parsed = sort0
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((pair) => {
+          const [k, d] = pair.split(":");
+          return { key: k as keyof Row, dir: d === "desc" ? "desc" : "asc" } as Sorter<Row>;
+        });
+      setSorters(parsed);
+    } else {
+      setSorters([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  // Persist to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (cat) params.set("cat", cat);
+    if (cert) params.set("cert", cert);
+    if (onlyLow) params.set("low", "1");
+    if (sorters.length) params.set("sort", sorters.map((s) => `${String(s.key)}:${s.dir}`).join(","));
+    const next = `${pathname}?${params.toString()}`;
+    const current = `${pathname}?${search.toString()}`;
+    if (next !== current) router.replace(next, { scroll: false });
+  }, [q, cat, cert, onlyLow, sorters, pathname, router, search]);
+
   const rows = useMemo(() => {
     const qq = q.trim().toLowerCase();
     const filtered = all.filter((p) => {
-      const matchQ = !qq ||
-        (p.name?.toLowerCase().includes(qq) || p.sku?.toLowerCase().includes(qq) || p.id?.toLowerCase().includes(qq));
+      const matchQ =
+        !qq || p.name?.toLowerCase().includes(qq) || p.sku?.toLowerCase().includes(qq) || p.id?.toLowerCase().includes(qq);
       const matchCat = !cat || p.category === cat;
       const matchCert = !cert || p.cert === cert;
       return matchQ && matchCat && matchCert;
@@ -80,13 +127,14 @@ export default function PartsPage() {
             </option>
           ))}
         </select>
-        {(q || cat || cert) && (
+        {(q || cat || cert || onlyLow || sorters.length) && (
           <button
             onClick={() => {
               setQ("");
               setCat("");
               setCert("");
               setOnlyLow(false);
+              setSorters([]);
             }}
             className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
           >
@@ -136,7 +184,11 @@ export default function PartsPage() {
         ]}
         onRowClick={(r) => setSelected(r)}
         multiSort
+        sorters={sorters}
+        onSortChange={setSorters}
       />
+
+      <TotalsBar rows={rows as any[]} />
 
       <PartDrawer
         part={selected}
@@ -157,6 +209,25 @@ export default function PartsPage() {
   );
 }
 
+function TotalsBar({ rows }: { rows: any[] }) {
+  const qty = rows.reduce((acc, r) => acc + (Number(r.qty) || 0), 0);
+  const value = rows.reduce((acc, r) => acc + (Number(r.qty) || 0) * (Number(r.unitCost) || 0), 0);
+  const formatted = (n: number) => n.toLocaleString(undefined, { style: "currency", currency: "CAD" }).replace("CA$", "CAD ");
+  return (
+    <div className="flex items-center justify-end gap-6 text-sm text-gray-700">
+      <div>
+        Articles: <span className="font-medium">{rows.length}</span>
+      </div>
+      <div>
+        Qté totale: <span className="font-medium">{qty}</span>
+      </div>
+      <div>
+        Valeur stock: <span className="font-semibold">{formatted(Number(value.toFixed(2)))}</span>
+      </div>
+    </div>
+  );
+}
+
 function exportCsv(rows: any[]) {
   const headers = ["sku", "name", "category", "cert", "qty", "minQty", "unitCost", "location"];
   const esc = (v: any) => {
@@ -166,9 +237,7 @@ function exportCsv(rows: any[]) {
     }
     return s;
   };
-  const lines = [headers.join(";")].concat(
-    rows.map((r) => headers.map((h) => esc((r as any)[h])).join(";"))
-  );
+  const lines = [headers.join(";")].concat(rows.map((r) => headers.map((h) => esc((r as any)[h])).join(";")));
   const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -179,3 +248,4 @@ function exportCsv(rows: any[]) {
   a.remove();
   URL.revokeObjectURL(url);
 }
+

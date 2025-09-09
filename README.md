@@ -19,6 +19,14 @@
 - 🛠️ **Work Orders (réparations)** avec tâches et suivi des pièces consommées.
 - 📊 **Dashboard** avec KPIs (valeur du stock, WO en cours, devis envoyés, etc.).
 
+### Inventaire (Phase 1)
+- Filtres: recherche (nom/SKU), catégorie, certificat, et filtre rapide "Bas stock".
+- Tri multi-colonnes (Shift-clic) avec indicateurs de priorité.
+- Drawer de détail pièce avec formulaire "Mouvement stock" (±, motif, pièce jointe mock) et historique local.
+- Quantité effective = quantité mock + mouvements locaux (persistés dans localStorage).
+- Export CSV de la liste filtrée/triée.
+- Totaux: nombre d’articles, quantité totale et valeur stock (CAD).
+
 ---
 
 ## 📂 Structure du projet

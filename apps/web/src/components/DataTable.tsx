@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 export type Col<T> = { key: keyof T; label: string; render?: (row: T) => React.ReactNode };
 
-type Sorter<T> = { key: keyof T; dir: "asc" | "desc" };
+export type Sorter<T> = { key: keyof T; dir: "asc" | "desc" };
 
 export function DataTable<T extends { [k: string]: any }>({
   rows,
@@ -11,20 +11,25 @@ export function DataTable<T extends { [k: string]: any }>({
   onRowClick,
   sortable = true,
   multiSort = false,
+  sorters,
+  onSortChange,
 }: {
   rows: T[];
   cols: Col<T>[];
   onRowClick?: (row: T) => void;
   sortable?: boolean;
   multiSort?: boolean;
+  sorters?: Sorter<T>[];
+  onSortChange?: (s: Sorter<T>[]) => void;
 }) {
-  const [sorters, setSorters] = useState<Sorter<T>[]>([]);
+  const [internalSorters, setInternalSorters] = useState<Sorter<T>[]>([]);
+  const activeSorters = sorters ?? internalSorters;
 
   const sorted = useMemo(() => {
-    if (!sortable || sorters.length === 0) return rows;
+    if (!sortable || activeSorters.length === 0) return rows;
     const copy = [...rows];
     copy.sort((a, b) => {
-      for (const s of sorters) {
+      for (const s of activeSorters) {
         const va = a[s.key as string];
         const vb = b[s.key as string];
         let cmp = 0;
@@ -40,13 +45,18 @@ export function DataTable<T extends { [k: string]: any }>({
       return 0;
     });
     return copy;
-  }, [rows, sorters, sortable]);
+  }, [rows, activeSorters, sortable]);
+
+  function setSortersNext(next: Sorter<T>[]) {
+    if (onSortChange) onSortChange(next);
+    else setInternalSorters(next);
+  }
 
   function clickHeader(key: keyof T, e: React.MouseEvent<HTMLTableHeaderCellElement>) {
     if (!sortable) return;
-    const idx = sorters.findIndex((s) => s.key === key);
+    const idx = activeSorters.findIndex((s) => s.key === key);
     const isShift = multiSort && e.shiftKey;
-    let next = [...sorters];
+    let next = [...activeSorters];
 
     if (isShift) {
       if (idx === -1) {
@@ -65,17 +75,17 @@ export function DataTable<T extends { [k: string]: any }>({
         next = [];
       }
     }
-    setSorters(next);
+    setSortersNext(next);
   }
 
   function headerIndicator(key: keyof T) {
-    const idx = sorters.findIndex((s) => s.key === key);
+    const idx = activeSorters.findIndex((s) => s.key === key);
     if (idx === -1) return null;
-    const arrow = sorters[idx].dir === "asc" ? "▲" : "▼";
+    const arrow = activeSorters[idx].dir === "asc" ? "▲" : "▼";
     return (
       <span className="inline-flex items-center gap-1 text-gray-400">
         {arrow}
-        {multiSort && sorters.length > 1 ? <sup>{idx + 1}</sup> : null}
+        {multiSort && activeSorters.length > 1 ? <sup>{idx + 1}</sup> : null}
       </span>
     );
   }
