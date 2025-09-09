@@ -165,3 +165,15 @@ L’application sera dispo sur 👉 http://localhost:3000
 ## 📄 Licence
 
 Projet interne démo
+### Data backend
+L’app supporte deux backends :
+
+- `NEXT_PUBLIC_DATA_BACKEND=MOCK` (par défaut) : tout en mémoire via Zustand + JSON.
+- `NEXT_PUBLIC_DATA_BACKEND=DB` : persistance Postgres (Drizzle).
+
+Pour activer la DB :
+1. Renseigner `DATABASE_URL` (Supabase ou Postgres).
+2. Lancer les migrations (à créer ensuite) et le script de seed :
+   ```bash
+   pnpm ts-node apps/web/scripts/seed.ts
+   ```
