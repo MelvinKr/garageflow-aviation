@@ -1,0 +1,10 @@
+[
+  { "id": "SUP-001", "name": "AeroParts Inc.", "email": "sales@aeroparts.com", "phone": "+1-555-1010" },
+  { "id": "SUP-002", "name": "Champion Aerospace", "email": "orders@championaero.com", "phone": "+1-555-2020" },
+  { "id": "SUP-003", "name": "Cleveland Brakes", "email": "support@cleveland.aero", "phone": "+1-555-3030" },
+  { "id": "SUP-004", "name": "Lycoming Parts", "email": "shop@lycomingparts.com", "phone": "+1-555-4040" },
+  { "id": "SUP-005", "name": "Piper OEM", "email": "oem@piper.com", "phone": "+1-555-5050" },
+  { "id": "SUP-006", "name": "Textron Aviation", "email": "spares@txtav.com", "phone": "+1-555-6060" },
+  { "id": "SUP-007", "name": "Aircraft Spruce", "email": "info@aircraftspruce.com", "phone": "+1-555-7070" }
+]
+

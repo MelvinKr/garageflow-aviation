@@ -1,0 +1,39 @@
+[
+  {
+    "id": "P-0001",
+    "name": "Filtre à huile IO-540",
+    "category": "Moteur",
+    "cert": "EASA Form 1",
+    "unitCost": 145.5,
+    "qty": 12,
+    "location": "R1-BAC-03",
+    "minQty": 5,
+    "supplier": "AeroParts Inc.",
+    "lastIn": "2025-02-28"
+  },
+  {
+    "id": "P-0002",
+    "name": "Bougie aviation REM37BY",
+    "category": "Allumage",
+    "cert": "8130-3",
+    "unitCost": 24.9,
+    "qty": 40,
+    "location": "R1-BAC-01",
+    "minQty": 20,
+    "supplier": "Champion",
+    "lastIn": "2025-03-02"
+  },
+  {
+    "id": "P-0003",
+    "name": "Plaquette de frein Cessna 172",
+    "category": "Train",
+    "cert": "EASA Form 1",
+    "unitCost": 89.0,
+    "qty": 8,
+    "location": "R2-BAC-05",
+    "minQty": 6,
+    "supplier": "Cleveland",
+    "lastIn": "2025-02-20"
+  }
+]
+

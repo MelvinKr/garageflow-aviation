@@ -1,0 +1,24 @@
+[
+  {
+    "id": "Q-2025-001",
+    "customerId": "CUST-001",
+    "aircraftId": "AC-172-001",
+    "items": [
+      { "partId": "P-0001", "label": "Filtre à huile + MO", "qty": 1, "unit": 145.5, "laborH": 0.5, "laborRate": 95 },
+      { "partId": "P-0002", "label": "Bougies (x4) + MO", "qty": 4, "unit": 24.9, "laborH": 0.8, "laborRate": 95 }
+    ],
+    "status": "draft",
+    "createdAt": "2025-03-01"
+  },
+  {
+    "id": "Q-2025-002",
+    "customerId": "CUST-002",
+    "aircraftId": "AC-PA28-002",
+    "items": [
+      { "partId": "P-0003", "label": "Plaquettes de frein (x2) + MO", "qty": 2, "unit": 89.0, "laborH": 1.2, "laborRate": 95 }
+    ],
+    "status": "sent",
+    "createdAt": "2025-03-03"
+  }
+]
+
