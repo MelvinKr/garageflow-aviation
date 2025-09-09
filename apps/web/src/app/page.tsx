@@ -16,6 +16,13 @@ export default function Page() {
       .slice(0, 3);
   }, [parts]);
 
+  const lowToOrder = useMemo(() => {
+    return [...parts]
+      .filter((p: any) => (p.qty ?? 0) <= (p.minQty ?? 0))
+      .sort((a: any, b: any) => (a.qty ?? 0) - (b.qty ?? 0))
+      .slice(0, 5);
+  }, [parts]);
+
   const currency = (n: number) => `${n.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
   return (
@@ -62,6 +69,35 @@ export default function Page() {
             sorters={sorters}
             onSortChange={setSorters}
           />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-semibold">À commander</h2>
+        <div className="rounded-2xl border bg-white p-4 shadow-sm">
+          {lowToOrder.length === 0 ? (
+            <div className="text-sm text-slate-500">Aucune pièce sous le seuil.</div>
+          ) : (
+            <ul className="divide-y">
+              {lowToOrder.map((p: any) => (
+                <li key={p.sku || p.id} className="flex items-center justify-between gap-4 py-2 text-sm">
+                  <div className="min-w-0">
+                    <div className="font-medium text-slate-800 truncate">{p.name}</div>
+                    <div className="text-slate-500">{p.sku || p.id}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-red-600 font-semibold">{p.qty} / {p.minQty}</div>
+                    <div className="text-xs text-slate-500">Qté / Seuil</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="pt-3 text-right">
+            <a className="text-sm font-medium text-blue-700 hover:underline" href="/parts?low=1">
+              Voir toutes
+            </a>
+          </div>
         </div>
       </section>
     </main>

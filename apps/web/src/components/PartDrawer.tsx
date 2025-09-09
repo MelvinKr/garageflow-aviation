@@ -1,5 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getSuppliers } from "@/lib/mock";
+import { listMovementsFor } from "@/lib/movementStore";
+import { StockMoveForm } from "@/components/StockMoveForm";
 
 type Part = {
   id: string;
@@ -13,6 +16,11 @@ type Part = {
   location?: string;
   supplier?: string;
   lastIn?: string;
+  batch?: string;
+  serial?: string;
+  expiry?: string;
+  compat?: string[];
+  reservedQty?: number;
 };
 
 export function PartDrawer({
@@ -34,6 +42,11 @@ export function PartDrawer({
 
   const open = !!part;
   const history = useMovements(part);
+  const supplier = useMemo(() => {
+    if (!part?.supplier) return null;
+    const list = getSuppliers() as any[];
+    return list.find((s) => s.name?.toLowerCase() === part.supplier?.toLowerCase());
+  }, [part]);
   return (
     <div
       className={`fixed inset-0 z-50 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
@@ -75,16 +88,30 @@ export function PartDrawer({
               <Field label="Catégorie" value={part.category} />
               <Field label="Certificat" value={part.cert} />
               <Field label="Qté" value={String(part.qty ?? "")} />
+              <Field label="Réservé" value={String(part.reservedQty ?? 0)} />
+              <Field label="Disponible" value={String((part.qty ?? 0) - (part.reservedQty ?? 0))} />
               <Field label="Seuil Min" value={String(part.minQty ?? "")} />
               <Field label="Coût unitaire (CAD)" value={part.unitCost?.toString()} />
               <Field label="Emplacement" value={part.location} />
+              <Field label="Lot/Batch" value={part.batch} />
+              <Field label="N° Série" value={part.serial} />
+              <Field label="Péremption" value={part.expiry} />
+              <Field label="Compatibilité" value={part.compat?.join(", ")} />
               <Field label="Fournisseur" value={part.supplier} />
+              {supplier && (
+                <div className="col-span-2 text-xs text-gray-600">
+                  <div className="font-medium">{supplier.name}</div>
+                  <div>{supplier.email} — {supplier.phone}</div>
+                </div>
+              )}
               <Field label="Dernière entrée" value={part.lastIn} />
             </div>
 
-            <StockMovementForm
+            <StockMoveForm
+              partKey={String(part.sku || part.id)}
+              currentQty={Number(part.qty ?? 0)}
               onSubmit={(payload) => {
-                onMovement?.(payload.signedQty, payload.reason, payload.fileName);
+                onMovement?.(payload.signedQty, payload.reason, payload.attachmentUrl);
                 onClose();
               }}
             />
@@ -133,11 +160,12 @@ function useMovements(part: Part | null) {
       if (!raw) return setItems([]);
       const arr: any[] = JSON.parse(raw);
       const key = part.sku || part.id;
-      const filtered = arr
-        .filter((m) => (m.sku || m.id) === key)
+      const lsItems = arr.filter((m) => (m.sku || m.id) === key);
+      const memItems = listMovementsFor(key);
+      const merged = [...lsItems, ...memItems]
         .sort((a, b) => (a.at > b.at ? -1 : 1))
         .slice(0, 50);
-      setItems(filtered);
+      setItems(merged);
     } catch {
       setItems([]);
     }

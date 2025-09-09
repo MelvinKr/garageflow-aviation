@@ -46,7 +46,7 @@ export default function PartsPage() {
     const q0 = search.get("q") ?? "";
     const cat0 = search.get("cat") ?? "";
     const cert0 = search.get("cert") ?? "";
-    const low0 = search.get("low") === "1";
+    const low0 = search.get("low") === "1" || search.get("lowStock") === "1";
     const sort0 = search.get("sort") ?? "";
     setQ(q0);
     setCat(cat0);
@@ -248,4 +248,3 @@ function exportCsv(rows: any[]) {
   a.remove();
   URL.revokeObjectURL(url);
 }
-
