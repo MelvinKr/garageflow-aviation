@@ -1,27 +1,57 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getKpis, getParts, getAircraft } from "@/lib/mock";
+import { getReservedMap } from "@/lib/reservedStore";
 import { KpiCard } from "@/components/KpiCard";
 import { DataTable, type Sorter } from "@/components/DataTable";
 
 export default function Page() {
   const k = getKpis();
   const parts = getParts();
+  const [deltas, setDeltas] = useState<Record<string, number>>({});
+  const [reservedMap, setReservedMap] = useState<Record<string, number>>({});
   const aircraft = getAircraft();
   const [sorters, setSorters] = useState<Sorter<any>[]>([{ key: "qty", dir: "asc" }]);
 
+  // Load movements + reserved once
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("gf_movements");
+      const arr: { sku?: string; id?: string; delta: number }[] = raw ? JSON.parse(raw) : [];
+      const agg: Record<string, number> = {};
+      for (const m of arr) {
+        const key = m.sku || m.id;
+        if (!key) continue;
+        agg[key] = (agg[key] || 0) + (Number(m.delta) || 0);
+      }
+      setDeltas(agg);
+    } catch {}
+    try {
+      setReservedMap(getReservedMap());
+    } catch {}
+  }, []);
+
+  const effectiveParts = useMemo(() => {
+    return parts.map((p: any) => {
+      const key = p.sku || p.id;
+      const eff = (p.qty ?? 0) + (deltas[key] || 0);
+      const res = reservedMap[key] ?? p.reservedQty ?? 0;
+      return { ...p, qty: eff - res };
+    });
+  }, [parts, deltas, reservedMap]);
+
   const topParts = useMemo(() => {
-    return [...parts]
+    return [...effectiveParts]
       .sort((a: any, b: any) => (a.qty ?? 0) - (b.qty ?? 0))
       .slice(0, 3);
-  }, [parts]);
+  }, [effectiveParts]);
 
   const lowToOrder = useMemo(() => {
-    return [...parts]
+    return [...effectiveParts]
       .filter((p: any) => (p.qty ?? 0) <= (p.minQty ?? 0))
       .sort((a: any, b: any) => (a.qty ?? 0) - (b.qty ?? 0))
       .slice(0, 5);
-  }, [parts]);
+  }, [effectiveParts]);
 
   const currency = (n: number) => `${n.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
