@@ -19,7 +19,7 @@ type Part = {
 };
 
 export default function PartsClient({ rows }: { rows: Part[] }) {
-  const [selected, setSelected] = useState<Part | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const cols = useMemo(
     () => [
@@ -65,17 +65,13 @@ export default function PartsClient({ rows }: { rows: Part[] }) {
   return (
     <>
       <div className="rounded-2xl border bg-white shadow-sm">
-        <DataTable<Part> rows={rows} cols={cols as any} onRowClick={undefined} />
+        <DataTable<Part>
+          rows={rows}
+          cols={cols as any}
+          onRowClick={(r) => setSelectedId(r.id)}
+        />
       </div>
-      <PartDrawer
-        part={selected}
-        onClose={() => setSelected(null)}
-        onSave={(updated) => {
-          // mock: close drawer; real impl would update state
-          setSelected(null);
-        }}
-      />
+      {selectedId && <PartDrawer id={selectedId} onClose={() => setSelectedId(null)} />}
     </>
   );
 }
-

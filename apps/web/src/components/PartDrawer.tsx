@@ -1,101 +1,199 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMockState, mockUpload, Part as MockPart } from "@/store/mockState";
+import suppliers from "@/mock/suppliers.json";
 
-type Part = {
-  id: string;
-  sku: string;
-  name: string;
-  category: string;
-  cert: string;
-  unitCost: number;
-  qty: number;
-  minQty: number;
-  location: string;
-  supplierId?: string;
-  trace?: { batch?: string; serial?: string | null; expiry?: string | null };
-};
+type Props = { id: string; onClose: () => void };
 
-export function PartDrawer({
-  part,
-  onClose,
-  onSave,
+function InlineField({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  options,
 }: {
-  part: Part | null;
-  onClose: () => void;
-  onSave: (updated: Part) => void;
+  label: string;
+  value: string | number | null | undefined;
+  onChange?: (v: any) => void;
+  type?: "text" | "number" | "select" | "link";
+  placeholder?: string;
+  options?: { value: string; label: string }[];
 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+
+  const commit = () => {
+    if (!onChange) return setEditing(false);
+    onChange(type === "number" ? Number(draft) : draft);
+    setEditing(false);
+  };
+
+  return (
+    <div className="grid grid-cols-[160px_1fr] items-start gap-3">
+      <div className="text-sm text-gray-500">{label}</div>
+      {!editing ? (
+        <div
+          className={`min-h-[24px] ${onChange ? "cursor-pointer hover:underline" : ""}`}
+          onClick={() => onChange && setEditing(true)}
+          title={onChange ? "Cliquer pour éditer" : ""}
+        >
+          {type === "link" && value ? (
+            <a href={String(value)} target="_blank" className="text-blue-600 underline">
+              {value}
+            </a>
+          ) : (
+            (value ?? "—").toString()
+          )}
+        </div>
+      ) : type === "select" && options ? (
+        <select
+          className="w-full rounded border px-2 py-1"
+          value={String(draft)}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          className="w-full rounded border px-2 py-1"
+          placeholder={placeholder}
+          value={String(draft)}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => (e.key === "Enter" ? commit() : null)}
+          onBlur={commit}
+          autoFocus
+        />
+      )}
+    </div>
+  );
+}
+
+export function PartDrawer({ id, onClose }: Props) {
+  const { parts, updatePart } = useMockState();
+  const part = useMemo(() => parts.find((p) => p.id === id), [parts, id]);
+  const [uploading, setUploading] = useState(false);
+
+  const supplierOptions = (suppliers as any[]).map((s) => ({ value: s.id, label: s.name }));
+  const supplier = (suppliers as any[]).find((s) => s.id === part?.supplierId);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
-    if (part) window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [part, onClose]);
+  }, [onClose]);
 
   if (!part) return null;
 
+  const dispo = Number(part.qty ?? 0) - Number(part.reservedQty ?? 0);
+  const min = Number(part.minQty ?? 0);
+
+  function buildMailTo(p: MockPart) {
+    const email = supplier?.email ?? "orders@example.com";
+    const subject = encodeURIComponent(`Commande ${p.sku} – ${p.name}`);
+    const suggest = Math.max(min * 2 - dispo, min - dispo + 1, 1);
+    const body = encodeURIComponent(`Bonjour,\n\nMerci de nous confirmer la dispo et le délai sur l’article:\n- SKU: ${p.sku}\n- Nom: ${p.name}\n- Certification: ${p.cert ?? "-"}\n- Quantité souhaitée: ${suggest}\n\nAdresse de livraison: [votre adresse]\nConditions: [NET30 / DUE_ON_RECEIPT]\nRéf. interne: ${p.id}\n\nCordialement,\nGarageFlow Aviation`);
+    return `mailto:${email}?subject=${subject}&body=${body}`;
+  }
+
+  async function onPhotoChoose(file?: File) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await mockUpload(file);
+      updatePart(part.id, { photoUrl: url } as any);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/20" onClick={onClose} />
-      <aside className="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto border-l bg-white p-5 shadow-xl">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Détails pièce</h2>
-          <button onClick={onClose} className="text-sm underline">
-            Fermer
-          </button>
-        </div>
+    <div className="fixed right-0 top-0 z-50 h-full w-[460px] overflow-y-auto border-l bg-white p-6 shadow-xl">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Détails pièce</h2>
+        <button onClick={onClose} className="text-sm underline">
+          Fermer
+        </button>
+      </div>
 
-        <div className="mt-4 space-y-3 text-sm">
-          <Row label="Réf / SKU" value={`${part.id} — ${part.sku}`} />
-          <Row label="Nom" value={part.name} />
-          <Row label="Catégorie" value={part.category} />
-          <Row label="Certificat" value={part.cert} />
-          <Row label="Fournisseur" value={part.supplierId ?? "—"} />
-          <Row label="Emplacement" value={part.location} />
-          <Row label="Quantité (min)" value={`${part.qty} (${part.minQty})`} />
-          <Row label="Coût unitaire" value={`${part.unitCost} CAD`} />
-          {part.trace && (
-            <div className="grid grid-cols-2 gap-3">
-              <Field title="Batch" value={part.trace.batch} />
-              <Field title="N° série" value={part.trace.serial ?? "—"} />
-              <Field title="Péremption" value={part.trace.expiry ?? "—"} />
-            </div>
-          )}
-        </div>
+      {/* Photo + Upload */}
+      <div className="mb-5">
+        <div className="mb-2 text-sm text-gray-500">Photo</div>
+        {part.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={part.photoUrl as any} alt={part.name} className="h-40 w-full rounded border object-cover" />
+        ) : (
+          <div className="grid h-40 w-full place-items-center rounded border text-gray-400">Aucune photo</div>
+        )}
+        <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => onPhotoChoose(e.target.files?.[0] || undefined)}
+          />
+          <span className="rounded border px-3 py-1 hover:bg-gray-50">{uploading ? "Téléversement..." : "Joindre/Changer photo"}</span>
+        </label>
+      </div>
 
-        <div className="mt-6 space-x-3">
-          <button
-            onClick={() => onSave({ ...part, qty: part.qty + 1 })}
-            className="rounded-lg border px-4 py-2 text-sm hover:bg-neutral-50"
-          >
-            + Entrée (mock)
-          </button>
-          <button
-            onClick={() => onSave({ ...part, qty: Math.max(0, part.qty - 1) })}
-            className="rounded-lg border px-4 py-2 text-sm hover:bg-neutral-50"
-          >
-            − Sortie (mock)
-          </button>
-        </div>
-      </aside>
-    </div>
-  );
-}
+      {/* Champs éditables inline */}
+      <div className="space-y-3">
+        <InlineField label="Réf / SKU" value={`${part.id} — ${part.sku}`} />
+        <InlineField label="Nom" value={part.name} onChange={(v) => updatePart(part.id, { name: v } as any)} />
+        <InlineField label="Catégorie" value={part.category} onChange={(v) => updatePart(part.id, { category: v } as any)} />
+        <InlineField label="Certificat" value={part.cert} onChange={(v) => updatePart(part.id, { cert: v } as any)} />
+        <InlineField
+          label="Lien certificat"
+          value={(part as any).certUrl}
+          onChange={(v) => updatePart(part.id, { certUrl: v } as any)}
+          type="link"
+          placeholder="https://… (pdf/url)"
+        />
+        <InlineField
+          label="Fournisseur"
+          value={supplier?.name ?? part.supplierId}
+          onChange={(v) => updatePart(part.id, { supplierId: v } as any)}
+          type="select"
+          options={supplierOptions}
+        />
+        <InlineField label="Emplacement" value={part.location} onChange={(v) => updatePart(part.id, { location: v } as any)} />
+        <InlineField label="Quantité" value={part.qty} onChange={(v) => updatePart(part.id, { qty: Number(v) } as any)} type="number" />
+        <InlineField label="Réservée" value={(part as any).reservedQty ?? 0} onChange={(v) => updatePart(part.id, { reservedQty: Number(v) } as any)} type="number" />
+        <InlineField label="Min" value={part.minQty} onChange={(v) => updatePart(part.id, { minQty: Number(v) } as any)} type="number" />
+        <InlineField label="Coût unitaire" value={part.unitCost} onChange={(v) => updatePart(part.id, { unitCost: Number(v) } as any)} type="number" />
+      </div>
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="w-36 text-neutral-500">{label}</div>
-      <div className="flex-1">{value}</div>
-    </div>
-  );
-}
+      {/* Statut stock */}
+      <div className="mt-4 text-sm">
+        <span className="mr-2 text-gray-500">Disponible:</span>
+        <span className={dispo <= min ? "font-semibold text-red-600" : "font-medium"}>{dispo}</span>
+        <span className="ml-2 text-gray-500"> (min {min})</span>
+      </div>
 
-function Field({ title, value }: { title: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="text-xs text-neutral-500">{title}</div>
-      <div className="text-sm font-medium">{value}</div>
+      {/* Actions */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        <a href={buildMailTo(part as any)} className="rounded border px-3 py-1 hover:bg-gray-50">
+          Commander
+        </a>
+        {supplier?.email && (
+          <a href={`mailto:${supplier.email}`} className="rounded border px-3 py-1 hover:bg-gray-50">
+            Contacter fournisseur
+          </a>
+        )}
+        {(part as any).certUrl && (
+          <a href={(part as any).certUrl as any} target="_blank" className="rounded border px-3 py-1 hover:bg-gray-50">
+            Voir certificat
+          </a>
+        )}
+      </div>
     </div>
   );
 }
