@@ -1,225 +1,103 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import { getSuppliers } from "@/lib/mock";
-import { listMovementsFor, clearFor as clearMovementsFor } from "@/lib/movementStore";
-import { getReservedFor, setReservedFor } from "@/lib/reservedStore";
-import { StockMoveForm } from "@/components/StockMoveForm";
+import { useEffect } from "react";
 
 type Part = {
   id: string;
-  sku?: string;
+  sku: string;
   name: string;
-  category?: string;
-  cert?: string;
-  qty?: number;
-  minQty?: number;
-  unitCost?: number;
-  location?: string;
-  supplier?: string;
-  lastIn?: string;
-  batch?: string;
-  serial?: string;
-  expiry?: string;
-  compat?: string[];
-  reservedQty?: number;
+  category: string;
+  cert: string;
+  unitCost: number;
+  qty: number;
+  minQty: number;
+  location: string;
+  supplierId?: string;
+  trace?: { batch?: string; serial?: string | null; expiry?: string | null };
 };
 
 export function PartDrawer({
   part,
   onClose,
-  onMovement,
-  onReservedChange,
-  onMovementsReset,
+  onSave,
 }: {
   part: Part | null;
   onClose: () => void;
-  onMovement?: (delta: number, reason: string, fileName?: string) => void;
-  onReservedChange?: (key: string, qty: number) => void;
-  onMovementsReset?: (key: string) => void;
+  onSave: (updated: Part) => void;
 }) {
   useEffect(() => {
-    function esc(e: KeyboardEvent) {
+    function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
-    window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
-  }, [onClose]);
+    if (part) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [part, onClose]);
 
-  const open = !!part;
-  const history = useMovements(part);
-  const supplier = useMemo(() => {
-    if (!part?.supplier) return null;
-    const list = getSuppliers() as any[];
-    return list.find((s) => s.name?.toLowerCase() === part.supplier?.toLowerCase());
-  }, [part]);
-  const key = String(part?.sku || part?.id || "");
-  const [reserved, setReserved] = useState<number>(0);
-  useEffect(() => {
-    if (!key) return;
-    setReserved(getReservedFor(key));
-  }, [key]);
+  if (!part) return null;
+
   return (
-    <div
-      className={`fixed inset-0 z-50 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
-      aria-hidden={!open}
-    >
-      {/* overlay */}
-      <div
-        className={`absolute inset-0 bg-black/30 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
-        onClick={onClose}
-      />
-      {/* panel */}
-      <aside
-        className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transition-transform ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between border-b p-4">
-          <div className="font-semibold inline-flex items-center gap-2">
-            Détail pièce
-            {part && part.qty !== undefined && part.minQty !== undefined && part.qty <= part.minQty && (
-              <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-700">LOW</span>
-            )}
-          </div>
-          <button className="text-sm text-gray-500 hover:text-gray-700" onClick={onClose}>
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/20" onClick={onClose} />
+      <aside className="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto border-l bg-white p-5 shadow-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Détails pièce</h2>
+          <button onClick={onClose} className="text-sm underline">
             Fermer
           </button>
         </div>
-        {part && (
-          <div className="space-y-4 p-4 text-sm">
-            <div>
-              <div className="text-xs text-gray-500">SKU</div>
-              <div className="font-medium">{part.sku ?? part.id}</div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">Nom</div>
-              <div className="font-medium">{part.name}</div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Catégorie" value={part.category} />
-              <Field label="Certificat" value={part.cert} />
-              <Field label="Qté" value={String(part.qty ?? "")} />
-              <div>
-                <div className="text-xs text-gray-500">Réservé</div>
-                <div>
-                  <input
-                    type="number"
-                    min={0}
-                    value={reserved}
-                    onChange={(e) => setReserved(Math.max(0, Number(e.target.value) || 0))}
-                    className="w-28 rounded-md border px-2 py-1 text-sm"
-                  />
-                  <button
-                    onClick={() => {
-                      setReservedFor(key, reserved);
-                      onReservedChange?.(key, reserved);
-                    }}
-                    className="ml-2 rounded-md bg-slate-800 px-2 py-1 text-xs text-white hover:bg-slate-700"
-                  >
-                    Enregistrer
-                  </button>
-                </div>
-              </div>
-              <Field label="Disponible" value={String((part.qty ?? 0) - reserved)} />
-              <Field label="Seuil Min" value={String(part.minQty ?? "")} />
-              <Field label="Coût unitaire (CAD)" value={part.unitCost?.toString()} />
-              <Field label="Emplacement" value={part.location} />
-              <Field label="Lot/Batch" value={part.batch} />
-              <Field label="N° Série" value={part.serial} />
-              <Field label="Péremption" value={part.expiry} />
-              <Field label="Compatibilité" value={part.compat?.join(", ")} />
-              <Field label="Fournisseur" value={part.supplier} />
-              {supplier && (
-                <div className="col-span-2 text-xs text-gray-600">
-                  <div className="font-medium">{supplier.name}</div>
-                  <div>{supplier.email} — {supplier.phone}</div>
-                </div>
-              )}
-              <Field label="Dernière entrée" value={part.lastIn} />
-            </div>
 
-            <StockMoveForm
-              partKey={String(part.sku || part.id)}
-              currentQty={Number(part.qty ?? 0)}
-              onSubmit={(payload) => {
-                onMovement?.(payload.signedQty, payload.reason, payload.attachmentUrl);
-                onClose();
-              }}
-            />
-
-            <div className="pt-2">
-              <div className="mb-2 text-sm font-medium">Historique mouvements</div>
-              {history.length === 0 ? (
-                <div className="text-xs text-gray-500">Aucun mouvement enregistré.</div>
-              ) : (
-                <ul className="max-h-56 overflow-auto divide-y rounded border">
-                  {history.map((m, i) => (
-                    <li key={i} className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
-                      <span className={m.delta >= 0 ? "text-green-700" : "text-red-700"}>
-                        {m.delta >= 0 ? "+" : ""}
-                        {m.delta}
-                      </span>
-                      <span className="flex-1 text-gray-700">{m.reason || "—"}</span>
-                      <span className="text-gray-400">{new Date(m.at).toLocaleString()}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div className="pt-2 text-right">
-                <button
-                  onClick={() => {
-                    // clear LS for this key
-                    try {
-                      const raw = localStorage.getItem("gf_movements");
-                      const arr = raw ? JSON.parse(raw) : [];
-                      const filtered = arr.filter((m: any) => (m.sku || m.id) !== key);
-                      localStorage.setItem("gf_movements", JSON.stringify(filtered));
-                    } catch {}
-                    clearMovementsFor(key);
-                    onMovementsReset?.(key);
-                  }}
-                  className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200"
-                >
-                  Reset mouvements
-                </button>
-              </div>
+        <div className="mt-4 space-y-3 text-sm">
+          <Row label="Réf / SKU" value={`${part.id} — ${part.sku}`} />
+          <Row label="Nom" value={part.name} />
+          <Row label="Catégorie" value={part.category} />
+          <Row label="Certificat" value={part.cert} />
+          <Row label="Fournisseur" value={part.supplierId ?? "—"} />
+          <Row label="Emplacement" value={part.location} />
+          <Row label="Quantité (min)" value={`${part.qty} (${part.minQty})`} />
+          <Row label="Coût unitaire" value={`${part.unitCost} CAD`} />
+          {part.trace && (
+            <div className="grid grid-cols-2 gap-3">
+              <Field title="Batch" value={part.trace.batch} />
+              <Field title="N° série" value={part.trace.serial ?? "—"} />
+              <Field title="Péremption" value={part.trace.expiry ?? "—"} />
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        <div className="mt-6 space-x-3">
+          <button
+            onClick={() => onSave({ ...part, qty: part.qty + 1 })}
+            className="rounded-lg border px-4 py-2 text-sm hover:bg-neutral-50"
+          >
+            + Entrée (mock)
+          </button>
+          <button
+            onClick={() => onSave({ ...part, qty: Math.max(0, part.qty - 1) })}
+            className="rounded-lg border px-4 py-2 text-sm hover:bg-neutral-50"
+          >
+            − Sortie (mock)
+          </button>
+        </div>
       </aside>
     </div>
   );
 }
 
-function Field({ label, value }: { label: string; value?: string }) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className="font-medium">{value ?? "—"}</div>
+    <div className="flex items-start gap-3">
+      <div className="w-36 text-neutral-500">{label}</div>
+      <div className="flex-1">{value}</div>
     </div>
   );
 }
 
-function useMovements(part: Part | null) {
-  const [items, setItems] = useState<Array<{ delta: number; reason?: string; at: string }>>([]);
-  useEffect(() => {
-    if (!part) return;
-    try {
-      const raw = localStorage.getItem("gf_movements");
-      if (!raw) return setItems([]);
-      const arr: any[] = JSON.parse(raw);
-      const key = part.sku || part.id;
-      const lsItems = arr.filter((m) => (m.sku || m.id) === key);
-      const memItems = listMovementsFor(key);
-      const merged = [...lsItems, ...memItems]
-        .sort((a, b) => (a.at > b.at ? -1 : 1))
-        .slice(0, 50);
-      setItems(merged);
-    } catch {
-      setItems([]);
-    }
-  }, [part]);
-  return items;
+function Field({ title, value }: { title: string; value: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="text-xs text-neutral-500">{title}</div>
+      <div className="text-sm font-medium">{value}</div>
+    </div>
+  );
 }
 
 function StockMovementForm({
