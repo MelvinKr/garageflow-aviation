@@ -22,9 +22,6 @@ export default function AircraftPage() {
   );
 }
 import { getAircraft, getCustomers } from "@/lib/mock";
-import dynamic from "next/dynamic";
-
-const AircraftDrawer = dynamic(() => import("@/components/AircraftDrawer"), { ssr: false });
 
 export default function AircraftPage() {
   const aircraft = getAircraft();
