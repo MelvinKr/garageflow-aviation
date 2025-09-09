@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { getKpis, getParts, getAircraft } from "@/lib/mock";
 import { getReservedMap } from "@/lib/reservedStore";
 import { KpiCard } from "@/components/KpiCard";
@@ -127,9 +128,12 @@ export default function Page() {
             </ul>
           )}
           <div className="pt-3 text-right">
-            <a className="text-sm font-medium text-blue-700 hover:underline" href="/parts?low=1">
+            <Link
+              href={{ pathname: "/parts", query: { lowStock: "1" } }}
+              className="text-sm font-medium text-blue-700 hover:underline"
+            >
               Voir toutes
-            </a>
+            </Link>
           </div>
         </div>
       </section>
