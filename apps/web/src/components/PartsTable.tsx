@@ -8,9 +8,13 @@ type Row = {
   category?: string;
   cert?: string;
   qty?: number;
-  minQty?: number;
+  minQty?: number; // still present in data
+  min?: number; // computed server-side for display
   unitCost?: number;
   location?: string;
+  supplierName?: string;
+  dispo?: number;
+  poHref?: string;
 };
 
 export function PartsTable({ rows }: { rows: Row[] }) {
@@ -20,14 +24,25 @@ export function PartsTable({ rows }: { rows: Row[] }) {
     { key: "category", label: "Cat." },
     { key: "cert", label: "Certif." },
     {
-      key: "qty",
-      label: "Qté",
-      render: (r) => (r.qty! <= (r.minQty ?? 0) ? <span className="text-red-600 font-medium">{r.qty}</span> : r.qty as any),
+      key: "dispo",
+      label: "Dispo / Min",
+      render: (r) => {
+        const node = `${r.dispo ?? 0} / ${r.min ?? r.minQty ?? 0}`;
+        const low = Number(r.dispo ?? 0) <= Number(r.min ?? r.minQty ?? 0);
+        return low ? <span className="text-red-600 font-semibold">{node}</span> : (node as any);
+      },
     },
-    { key: "minQty", label: "Min" },
-    { key: "unitCost", label: "Coût (CAD)" },
     { key: "location", label: "Emplacement" },
+    { key: "supplierName", label: "Fournisseur" },
+    {
+      key: "poHref" as any,
+      label: "Actions",
+      render: (r) => (
+        <a href={r.poHref} className="inline-flex items-center rounded border px-3 py-1 text-sm hover:bg-gray-50">
+          Commander
+        </a>
+      ),
+    },
   ];
   return <DataTable rows={rows} cols={cols} />;
 }
-

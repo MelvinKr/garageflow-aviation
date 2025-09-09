@@ -7,9 +7,10 @@
     "cert": "EASA Form 1",
     "unitCost": 145.5,
     "qty": 12,
+    "reservedQty": 0,
     "location": "R1-BAC-03",
     "minQty": 5,
-    "supplier": "AeroParts Inc.",
+    "supplierId": "SUP-001",
     "lastIn": "2025-02-28"
   },
   {
@@ -20,22 +21,24 @@
     "cert": "8130-3",
     "unitCost": 24.9,
     "qty": 40,
+    "reservedQty": 0,
     "location": "R1-BAC-01",
     "minQty": 20,
-    "supplier": "Champion",
+    "supplierId": "SUP-002",
     "lastIn": "2025-03-02"
   },
   {
     "id": "P-0003",
-    "sku": "P-0003",
-    "name": "Plaquette de frein Cessna 172",
+    "sku": "CLEV-66-105",
+    "name": "Plaquette de frein (Cessna)",
     "category": "Train",
     "cert": "EASA Form 1",
     "unitCost": 89.0,
-    "qty": 8,
+    "qty": 4,
+    "reservedQty": 2,
     "location": "R2-BAC-05",
     "minQty": 6,
-    "supplier": "Cleveland",
+    "supplierId": "SUP-003",
     "lastIn": "2025-02-20"
   }
 ]
