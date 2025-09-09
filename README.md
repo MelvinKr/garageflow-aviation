@@ -27,6 +27,11 @@
 - Export CSV de la liste filtrée/triée.
 - Totaux: nombre d’articles, quantité totale et valeur stock (CAD).
 
+### UI
+- Sidebar sombre avec icônes et état actif.
+- Cartes KPI avec icônes (Dashboard) et formatage fr-CA.
+- Tables polies: header sticky, séparation douce, cartes arrondies.
+
 ---
 
 ## 📂 Structure du projet
@@ -68,10 +73,13 @@ L’application sera dispo sur 👉 http://localhost:3000
 
 ## 🛣️ Roadmap
 
-- 🔗 Connexion à Supabase/Drizzle (DB cloud).
-- 📶 Mode offline-first avec synchronisation automatique.
-- 📑 Génération de fiches de révision automatiques.
-- 🤖 Rapports financiers et prévisions avec IA.
+- [x] Phase 0 — Socle & DX (Turborepo, layout/nav, CI lint+typecheck+build)
+- [x] Phase 1 — Inventaire (liste, filtres, tri multi, drawer, mouvements locaux, export, totaux)
+- [ ] Phase 2 — Avions & Clients (fiches détaillées, recherche avancée)
+- [ ] Phase 3 — Devis (workflow brouillon → envoyé → accepté, calcul TVA, PDF)
+- [ ] Phase 4 — Work Orders (tâches, pièces consommées, clôture, rapports)
+- [ ] Phase 5 — Sync offline (Dexie sync) et DB cloud (Supabase/Drizzle)
+- [ ] Phase 6 — IA (assistance notes WO, prévisions stock)
 
 ---
 
