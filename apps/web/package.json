@@ -4,14 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "drizzle:generate": "drizzle-kit generate",
-    "drizzle:migrate": "drizzle-kit migrate",
-    "drizzle:studio": "drizzle-kit studio"
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
+    "db:seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts"
   },
   "dependencies": {
     "@garageflow/ai": "*",
@@ -31,6 +32,8 @@
     "@types/react": "^18.2.79",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "postcss": "^8.4.41",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.0.0",

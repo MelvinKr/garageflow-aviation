@@ -177,3 +177,24 @@ Pour activer la DB :
    ```bash
    pnpm ts-node apps/web/scripts/seed.ts
    ```
+## Phase 4 — Data Backend (DB)
+- Toggle : `NEXT_PUBLIC_DATA_BACKEND=MOCK|DB`
+- Drizzle
+  ```bash
+  pnpm --filter web db:generate   # génère migration depuis schema.ts
+  pnpm --filter web db:migrate    # applique migrations
+  pnpm --filter web db:seed       # charge les mocks
+  pnpm --filter web db:studio     # navigateur de données
+  ```
+
+API routes clés :
+
+POST `/api/quotes/:id/accept` → crée le WO + réservations
+
+POST `/api/workorders/:id/tasks/:taskId/toggle` → consommation/dereserve (mock)
+
+POST `/api/parts/:id/movement` → IN/OUT/RESERVE/UNRESERVE
+
+POST `/api/purchase-orders/:id/items/:itemId/receive` → entrée stock
+
+Alternative : Server Actions (`src/actions/*`) pour appels côté serveur sans API publique.
