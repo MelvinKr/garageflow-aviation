@@ -3,46 +3,81 @@ import { useMemo, useState } from "react";
 
 export type Col<T> = { key: keyof T; label: string; render?: (row: T) => React.ReactNode };
 
+type Sorter<T> = { key: keyof T; dir: "asc" | "desc" };
+
 export function DataTable<T extends { [k: string]: any }>({
   rows,
   cols,
   onRowClick,
   sortable = true,
+  multiSort = false,
 }: {
   rows: T[];
   cols: Col<T>[];
   onRowClick?: (row: T) => void;
   sortable?: boolean;
+  multiSort?: boolean;
 }) {
-  const [sortKey, setSortKey] = useState<keyof T | null>(null);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sorters, setSorters] = useState<Sorter<T>[]>([]);
 
   const sorted = useMemo(() => {
-    if (!sortKey) return rows;
+    if (!sortable || sorters.length === 0) return rows;
     const copy = [...rows];
     copy.sort((a, b) => {
-      const va = a[sortKey as string];
-      const vb = b[sortKey as string];
-      if (typeof va === "number" && typeof vb === "number") {
-        return sortDir === "asc" ? va - vb : vb - va;
+      for (const s of sorters) {
+        const va = a[s.key as string];
+        const vb = b[s.key as string];
+        let cmp = 0;
+        if (typeof va === "number" && typeof vb === "number") {
+          cmp = va - vb;
+        } else {
+          const sa = String(va ?? "").toLowerCase();
+          const sb = String(vb ?? "").toLowerCase();
+          cmp = sa.localeCompare(sb);
+        }
+        if (cmp !== 0) return s.dir === "asc" ? cmp : -cmp;
       }
-      const sa = String(va ?? "").toLowerCase();
-      const sb = String(vb ?? "").toLowerCase();
-      return sortDir === "asc" ? sa.localeCompare(sb) : sb.localeCompare(sa);
+      return 0;
     });
     return copy;
-  }, [rows, sortKey, sortDir]);
+  }, [rows, sorters, sortable]);
 
-  function clickHeader(key: keyof T) {
+  function clickHeader(key: keyof T, e: React.MouseEvent<HTMLTableHeaderCellElement>) {
     if (!sortable) return;
-    setSortKey((prev) => {
-      if (prev === key) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-        return prev;
+    const idx = sorters.findIndex((s) => s.key === key);
+    const isShift = multiSort && e.shiftKey;
+    let next = [...sorters];
+
+    if (isShift) {
+      if (idx === -1) {
+        next.push({ key, dir: "asc" });
+      } else if (next[idx].dir === "asc") {
+        next[idx] = { key, dir: "desc" };
+      } else {
+        next.splice(idx, 1); // remove if desc -> none
       }
-      setSortDir("asc");
-      return key;
-    });
+    } else {
+      if (idx === -1) {
+        next = [{ key, dir: "asc" }];
+      } else if (next[idx].dir === "asc") {
+        next = [{ key, dir: "desc" }];
+      } else {
+        next = [];
+      }
+    }
+    setSorters(next);
+  }
+
+  function headerIndicator(key: keyof T) {
+    const idx = sorters.findIndex((s) => s.key === key);
+    if (idx === -1) return null;
+    const arrow = sorters[idx].dir === "asc" ? "▲" : "▼";
+    return (
+      <span className="inline-flex items-center gap-1 text-gray-400">
+        {arrow}
+        {multiSort && sorters.length > 1 ? <sup>{idx + 1}</sup> : null}
+      </span>
+    );
   }
 
   return (
@@ -54,14 +89,12 @@ export function DataTable<T extends { [k: string]: any }>({
               <th
                 key={String(c.key)}
                 className={`px-3 py-2 text-left font-medium ${sortable ? "cursor-pointer select-none" : ""}`}
-                onClick={() => clickHeader(c.key)}
-                title={sortable ? "Trier" : undefined}
+                onClick={(e) => clickHeader(c.key, e)}
+                title={sortable ? (multiSort ? "Trier (Shift = tri multiple)" : "Trier") : undefined}
               >
                 <span className="inline-flex items-center gap-1">
                   {c.label}
-                  {sortKey === c.key && (
-                    <span className="text-gray-400">{sortDir === "asc" ? "▲" : "▼"}</span>
-                  )}
+                  {headerIndicator(c.key)}
                 </span>
               </th>
             ))}

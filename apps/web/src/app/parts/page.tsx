@@ -12,6 +12,7 @@ export default function PartsPage() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
   const [cert, setCert] = useState("");
+  const [onlyLow, setOnlyLow] = useState(false);
   const [selected, setSelected] = useState<Row | null>(null);
 
   const cats = useMemo(() => Array.from(new Set(all.map((p) => p.category).filter(Boolean))) as string[], [all]);
@@ -43,11 +44,12 @@ export default function PartsPage() {
       return matchQ && matchCat && matchCert;
     });
     // apply effective quantity with local deltas
-    return filtered.map((p) => ({
+    const withQty = filtered.map((p) => ({
       ...p,
       qty: (p.qty ?? 0) + (deltas[p.sku || p.id] || 0),
     }));
-  }, [all, q, cat, cert, deltas]);
+    return onlyLow ? withQty.filter((p) => (p.qty ?? 0) <= (p.minQty ?? 0)) : withQty;
+  }, [all, q, cat, cert, deltas, onlyLow]);
 
   const low = (qty: number, min: number) => (qty <= min ? <span className="text-red-600 font-medium">{qty}</span> : qty);
 
@@ -84,12 +86,22 @@ export default function PartsPage() {
               setQ("");
               setCat("");
               setCert("");
+              setOnlyLow(false);
             }}
             className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200"
           >
             Réinitialiser
           </button>
         )}
+
+        <button
+          onClick={() => setOnlyLow((v) => !v)}
+          className={`rounded-full px-3 py-1.5 text-sm ring-1 ${
+            onlyLow ? "bg-red-600 text-white ring-red-600" : "bg-white text-gray-700 ring-gray-300 hover:bg-gray-50"
+          }`}
+        >
+          Bas stock
+        </button>
 
         <button
           onClick={() => exportCsv(rows)}
@@ -123,6 +135,7 @@ export default function PartsPage() {
           { key: "location", label: "Emplacement" },
         ]}
         onRowClick={(r) => setSelected(r)}
+        multiSort
       />
 
       <PartDrawer
