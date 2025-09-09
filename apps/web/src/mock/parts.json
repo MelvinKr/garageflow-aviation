@@ -1,6 +1,7 @@
 [
   {
     "id": "P-0001",
+    "sku": "P-0001",
     "name": "Filtre à huile IO-540",
     "category": "Moteur",
     "cert": "EASA Form 1",
@@ -13,6 +14,7 @@
   },
   {
     "id": "P-0002",
+    "sku": "P-0002",
     "name": "Bougie aviation REM37BY",
     "category": "Allumage",
     "cert": "8130-3",
@@ -25,6 +27,7 @@
   },
   {
     "id": "P-0003",
+    "sku": "P-0003",
     "name": "Plaquette de frein Cessna 172",
     "category": "Train",
     "cert": "EASA Form 1",
@@ -36,4 +39,3 @@
     "lastIn": "2025-02-20"
   }
 ]
-
