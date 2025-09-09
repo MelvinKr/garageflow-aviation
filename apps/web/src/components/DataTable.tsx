@@ -91,14 +91,16 @@ export function DataTable<T extends { [k: string]: any }>({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border">
+    <div className="overflow-auto rounded-2xl border bg-white shadow-sm">
       <table className="min-w-full text-sm">
-        <thead>
-          <tr className="bg-gray-50">
+        <thead className="sticky top-0 z-10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+          <tr>
             {cols.map((c) => (
               <th
                 key={String(c.key)}
-                className={`px-3 py-2 text-left font-medium ${sortable ? "cursor-pointer select-none" : ""}`}
+                className={`px-4 py-2.5 text-left font-medium text-slate-600 ${
+                  sortable ? "cursor-pointer select-none" : ""
+                }`}
                 onClick={(e) => clickHeader(c.key, e)}
                 title={sortable ? (multiSort ? "Trier (Shift = tri multiple)" : "Trier") : undefined}
               >
@@ -110,15 +112,15 @@ export function DataTable<T extends { [k: string]: any }>({
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-100">
           {sorted.map((r, i) => (
             <tr
               key={i}
-              className={`border-t ${onRowClick ? "hover:bg-gray-50 cursor-pointer" : ""}`}
+              className={`${onRowClick ? "hover:bg-slate-50 cursor-pointer" : ""}`}
               onClick={onRowClick ? () => onRowClick(r) : undefined}
             >
               {cols.map((c) => (
-                <td key={String(c.key)} className="px-3 py-2">
+                <td key={String(c.key)} className="px-4 py-3">
                   {c.render ? c.render(r) : String(r[c.key])}
                 </td>
               ))}

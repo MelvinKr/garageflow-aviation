@@ -16,8 +16,7 @@ export default function Page() {
       .slice(0, 3);
   }, [parts]);
 
-  const currency = (n: number) =>
-    n.toLocaleString(undefined, { style: "currency", currency: "CAD" }).replace("CA$", "$");
+  const currency = (n: number) => `${n.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
   return (
     <main className="p-8 space-y-8">
