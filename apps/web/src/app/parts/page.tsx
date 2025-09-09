@@ -1,5 +1,5 @@
 import { getParts } from "@/lib/mock";
-import { DataTable } from "@/components/DataTable";
+import { PartsTable } from "@/components/PartsTable";
 
 type Row = ReturnType<typeof getParts>[number] & { sku?: string };
 
@@ -18,30 +18,8 @@ export default function PartsPage({
         Inventaire — Pièces {onlyLow && "(Sous le seuil)"}
       </h1>
       <div className="rounded-2xl border bg-white shadow-sm">
-        <DataTable
-          rows={rows}
-          cols={[
-            { key: "sku" as keyof Row, label: "SKU" },
-            { key: "name", label: "Nom" },
-            { key: "category", label: "Cat." },
-            { key: "cert", label: "Certif." },
-            {
-              key: "qty" as keyof Row,
-              label: "Qté",
-              render: (r: any) =>
-                r.qty <= r.minQty ? (
-                  <span className="text-red-600 font-medium">{r.qty}</span>
-                ) : (
-                  r.qty
-                ),
-            },
-            { key: "minQty" as keyof Row, label: "Min" },
-            { key: "unitCost" as keyof Row, label: "Coût (CAD)" },
-            { key: "location" as keyof Row, label: "Emplacement" },
-          ]}
-        />
+        <PartsTable rows={rows} />
       </div>
     </section>
   );
 }
-
