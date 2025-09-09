@@ -76,7 +76,7 @@ function InlineField({
 }
 
 export function PartDrawer({ id, onClose }: Props) {
-  const { parts, updatePart } = useMockState();
+  const { parts, updatePart, movements, addMovement } = useMockState();
   const part = useMemo(() => parts.find((p) => p.id === id), [parts, id]);
   const [uploading, setUploading] = useState(false);
 
@@ -95,6 +95,10 @@ export function PartDrawer({ id, onClose }: Props) {
 
   const dispo = Number(part.qty ?? 0) - Number(part.reservedQty ?? 0);
   const min = Number(part.minQty ?? 0);
+  const history = useMemo(
+    () => movements.filter((m) => m.partId === part.id).sort((a, b) => (a.date > b.date ? -1 : 1)),
+    [movements, part.id]
+  );
 
   function buildMailTo(p: MockPart) {
     const email = supplier?.email ?? "orders@example.com";
@@ -113,6 +117,30 @@ export function PartDrawer({ id, onClose }: Props) {
     } finally {
       setUploading(false);
     }
+  }
+
+  // Inline movement form state
+  const [mvType, setMvType] = useState<"IN" | "OUT">("OUT");
+  const [mvQty, setMvQty] = useState<number>(1);
+  const [mvReason, setMvReason] = useState<string>("");
+  const [mvErr, setMvErr] = useState<string>("");
+
+  function addInlineMovement() {
+    const qty = Math.abs(Number(mvQty) || 0);
+    if (qty <= 0) {
+      setMvErr("Quantité invalide");
+      setTimeout(() => setMvErr(""), 2000);
+      return;
+    }
+    // Avoid going negative
+    if (mvType === "OUT" && qty > Number(part.qty ?? 0)) {
+      setMvErr("Stock insuffisant");
+      setTimeout(() => setMvErr(""), 2000);
+      return;
+    }
+    addMovement({ partId: part.id, type: mvType, qty, reason: mvReason.trim() || undefined });
+    setMvQty(1);
+    setMvReason("");
   }
 
   return (
@@ -192,6 +220,66 @@ export function PartDrawer({ id, onClose }: Props) {
           <a href={(part as any).certUrl as any} target="_blank" className="rounded border px-3 py-1 hover:bg-gray-50">
             Voir certificat
           </a>
+        )}
+      </div>
+
+      {/* Inline movement creation */}
+      <div className="mt-6 rounded-lg border p-3">
+        <div className="mb-2 text-sm font-medium">Ajouter un mouvement</div>
+        {mvErr && <div className="mb-2 rounded bg-red-50 px-2 py-1 text-xs text-red-700">{mvErr}</div>}
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <select className="rounded border px-2 py-1" value={mvType} onChange={(e) => setMvType(e.target.value as any)}>
+            <option value="IN">Entrée (+)</option>
+            <option value="OUT">Sortie (−)</option>
+          </select>
+          <input
+            type="number"
+            min={1}
+            value={mvQty}
+            onChange={(e) => setMvQty(Number(e.target.value))}
+            className="w-24 rounded border px-2 py-1"
+          />
+          <input
+            type="text"
+            placeholder="Motif (ex: utilisé sur WO-123)"
+            value={mvReason}
+            onChange={(e) => setMvReason(e.target.value)}
+            className="min-w-[240px] flex-1 rounded border px-2 py-1"
+          />
+          <button onClick={addInlineMovement} className="rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700">
+            Ajouter
+          </button>
+        </div>
+      </div>
+
+      {/* History */}
+      <div className="mt-6">
+        <div className="mb-2 text-sm font-medium">Historique des mouvements</div>
+        {history.length === 0 ? (
+          <div className="text-xs text-gray-500">Aucun mouvement enregistré.</div>
+        ) : (
+          <div className="overflow-hidden rounded-lg border">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-left text-xs font-medium text-gray-600">
+                <tr>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Type</th>
+                  <th className="px-3 py-2">Qté</th>
+                  <th className="px-3 py-2">Motif</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {history.map((m) => (
+                  <tr key={m.id}>
+                    <td className="px-3 py-2 text-gray-600">{new Date(m.date).toLocaleString()}</td>
+                    <td className="px-3 py-2">{m.type}</td>
+                    <td className="px-3 py-2">{m.type === "IN" ? "+" : "-"}{m.qty}</td>
+                    <td className="px-3 py-2 text-gray-700">{m.reason ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
