@@ -22,7 +22,7 @@ export function SidebarNav() {
     <aside className="w-64 bg-[#1f2a37] text-slate-200 min-h-screen">
       <div className="p-5 text-lg font-semibold tracking-tight">GarageFlow</div>
       <nav className="flex flex-col gap-1 p-3 text-sm">
-        {[...links, { href: "/reports", label: "Rapports", icon: <ChartIcon /> }, { href: "/purchase-orders", label: "PO", icon: <StoreIcon /> }, { href: "/templates", label: "Templates", icon: <WrenchIcon /> }].map((item) => {
+        {[...links, { href: "/reports", label: "Rapports", icon: <ChartIcon /> }, { href: "/admin/roles", label: "Admin → Rôles", icon: <UsersIcon /> }, { href: "/purchase-orders", label: "PO", icon: <StoreIcon /> }, { href: "/templates", label: "Templates", icon: <WrenchIcon /> }].map((item) => {
           const active = mounted && pathname === item.href;
           return (
             <Link
