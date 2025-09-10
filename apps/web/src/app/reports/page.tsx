@@ -6,6 +6,8 @@ import ManagerOnly from "@/components/ManagerOnly";
 import { ExportButtons } from "@/components/ExportButtons";
 import { computeEMA, restockSuggestion } from "@/lib/ema";
 import type { StockKPI, QuoteKPI, WOKPI } from "@/lib/reportTypes";
+import { useSearchParams } from "next/navigation";
+import ReportsClient from "./ReportsClient";
 
 const LineChart = dynamic(() => import("recharts").then((m) => m.LineChart), { ssr: false });
 const Line = dynamic(() => import("recharts").then((m) => m.Line), { ssr: false });
@@ -23,9 +25,10 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return res.json();
 }
 
-async function getStockKPI(): Promise<StockKPI[]> {
+async function getStockKPI(months: number, alpha: number): Promise<StockKPI[]> {
   try {
-    return await fetchJSON<StockKPI[]>("/api/reports/stock");
+    const res = await fetchJSON<{ months: number; alpha: number; rows: StockKPI[] }>(`/api/reports/stock?months=${months}&alpha=${alpha}`);
+    return res.rows;
   } catch {
     const months = Array.from({ length: 12 }).map((_, i) => i);
     return [
@@ -38,9 +41,9 @@ async function getStockKPI(): Promise<StockKPI[]> {
   }
 }
 
-async function getQuoteKPI(): Promise<QuoteKPI[]> {
+async function getQuoteKPI(months: number): Promise<QuoteKPI[]> {
   try {
-    return await fetchJSON<QuoteKPI[]>("/api/reports/quotes");
+    return await fetchJSON<QuoteKPI[]>(`/api/reports/quotes?months=${months}`);
   } catch {
     return Array.from({ length: 12 }).map((_, i) => ({
       month: `2025-${String(i + 1).padStart(2, "0")}`,
@@ -51,9 +54,9 @@ async function getQuoteKPI(): Promise<QuoteKPI[]> {
   }
 }
 
-async function getWOKPI(): Promise<WOKPI[]> {
+async function getWOKPI(months: number): Promise<WOKPI[]> {
   try {
-    return await fetchJSON<WOKPI[]>("/api/reports/wo");
+    return await fetchJSON<WOKPI[]>(`/api/reports/wo?months=${months}`);
   } catch {
     return Array.from({ length: 12 }).map((_, i) => ({
       month: `2025-${String(i + 1).padStart(2, "0")}`,
@@ -65,17 +68,20 @@ async function getWOKPI(): Promise<WOKPI[]> {
 }
 
 export default function ReportsPage() {
+  const sp = useSearchParams();
   const [activeTab, setActiveTab] = useState<"stock" | "quotes" | "wo">("stock");
   const [stock, setStock] = useState<StockKPI[] | null>(null);
   const [quotes, setQuotes] = useState<QuoteKPI[] | null>(null);
   const [wo, setWo] = useState<WOKPI[] | null>(null);
-  const [emaAlpha, setEmaAlpha] = useState<number>(0.35);
+  const months = Math.max(1, Math.min(24, Number(sp.get("months") ?? 12)));
+  const emaAlpha = Math.max(0.05, Math.min(0.95, Number(sp.get("alpha") ?? 0.5)));
+  const setEmaAlpha = (_: number) => {};
 
   useEffect(() => {
-    getStockKPI().then(setStock).catch(console.error);
-    getQuoteKPI().then(setQuotes).catch(console.error);
-    getWOKPI().then(setWo).catch(console.error);
-  }, []);
+    getStockKPI(months, emaAlpha).then(setStock).catch(console.error);
+    getQuoteKPI(months).then(setQuotes).catch(console.error);
+    getWOKPI(months).then(setWo).catch(console.error);
+  }, [months, emaAlpha]);
 
   const stockWithEMA = useMemo(() => {
     if (!stock) return [];
@@ -109,6 +115,7 @@ export default function ReportsPage() {
           </div>
         </div>
 
+        <ReportsClient />
         {activeTab === "stock" && (
           <div className="space-y-4">
             <div className="border rounded-2xl">
