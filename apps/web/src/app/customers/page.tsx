@@ -1,10 +1,10 @@
-import { getCustomers, getAircraft } from "@/lib/mock";
+import { listCustomers } from "@/data/customers.repo";
+import { listAircraft } from "@/data/aircraft.repo";
 
-export default function CustomersPage() {
-  const customers = getCustomers();
-  const aircraft = getAircraft();
+export default async function CustomersPage() {
+  const [customers, aircraft] = await Promise.all([listCustomers({ limit: 500 }), listAircraft({ limit: 1000 })]);
   const planesByOwner = new Map<string, number>();
-  for (const a of aircraft as any[]) planesByOwner.set(a.ownerId, (planesByOwner.get(a.ownerId) ?? 0) + 1);
+  for (const a of aircraft as any[]) planesByOwner.set((a as any).owner_id ?? (a as any).ownerId, (planesByOwner.get((a as any).owner_id ?? (a as any).ownerId) ?? 0) + 1);
 
   return (
     <section className="p-6 space-y-4">
@@ -21,13 +21,13 @@ export default function CustomersPage() {
             </tr>
           </thead>
           <tbody>
-            {(customers as any[]).map((c) => (
+            {customers.map((c) => (
               <tr key={c.id} className="border-t">
                 <td className="px-3 py-2">{c.name}</td>
                 <td className="px-3 py-2">{c.email}</td>
                 <td className="px-3 py-2">{c.phone}</td>
                 <td className="px-3 py-2">{planesByOwner.get(c.id) ?? 0}</td>
-                <td className="px-3 py-2">{c.terms ?? "—"}</td>
+                <td className="px-3 py-2">{(c as any).terms ?? "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -36,4 +36,3 @@ export default function CustomersPage() {
     </section>
   );
 }
-

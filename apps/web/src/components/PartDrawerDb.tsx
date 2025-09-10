@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { getPartAction, updatePartAction, createMovementAction } from "@/app/parts/actions";
 import { useToast } from "@/components/ui/useToast";
 
 export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>void }) {
   const { push } = useToast();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [min, setMin] = useState(0);
@@ -34,6 +37,7 @@ export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>v
     try {
       await updatePartAction({ id, name, min_stock: min });
       push({ type: "success", message: "Sauvegardé" });
+      startTransition(() => router.refresh());
       onClose();
     } catch (e: any) {
       push({ type: "error", message: e?.message || String(e) });
@@ -46,6 +50,7 @@ export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>v
       await createMovementAction({ part_id: id, type, quantity: Math.abs(delta), note: "Ajustement" });
       setQty(q => q + delta);
       push({ type: "success", message: "Mouvement enregistré" });
+      startTransition(() => router.refresh());
     } catch (e: any) {
       push({ type: "error", message: e?.message || String(e) });
     }
@@ -79,10 +84,9 @@ export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>v
       </div>
 
       <div className="mt-6 flex gap-2">
-        <button onClick={saveMeta} className="px-3 py-1 rounded bg-black text-white hover:opacity-90">Sauvegarder</button>
+        <button onClick={saveMeta} disabled={isPending} className="px-3 py-1 rounded bg-black text-white hover:opacity-90 disabled:opacity-60">{isPending?"Sauvegarde…":"Sauvegarder"}</button>
         <button onClick={onClose} className="px-3 py-1 rounded border hover:bg-gray-50">Annuler</button>
       </div>
     </div>
   );
 }
-

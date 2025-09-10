@@ -14,7 +14,7 @@ type Part = {
   location: string;
 };
 
-export default function PartsClient({ rows }: { rows: Part[] }) {
+export default function PartsClient({ rows, movementAction }: { rows: Part[]; movementAction: (fd: FormData)=>Promise<any> }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const cols = useMemo(
     () => [
@@ -38,6 +38,18 @@ export default function PartsClient({ rows }: { rows: Part[] }) {
         ),
       },
       { key: "location", label: "Emplacement" },
+      {
+        key: "actions",
+        label: "Actions",
+        render: (r: Part) => (
+          <form action={movementAction} className="inline">
+            <input type="hidden" name="part_id" value={r.id} />
+            <input type="hidden" name="type" value="OUT" />
+            <input type="hidden" name="quantity" value={1} />
+            <button type="submit" className="px-2 py-1 border rounded text-xs hover:bg-gray-50" title="Sortir 1">-1</button>
+          </form>
+        ),
+      },
     ],
     []
   );

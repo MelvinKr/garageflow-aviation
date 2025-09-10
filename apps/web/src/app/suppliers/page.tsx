@@ -1,10 +1,7 @@
-import { getSuppliers, getParts } from "@/lib/mock";
+import { listSuppliers } from "@/data/suppliers.repo";
 
-export default function SuppliersPage() {
-  const suppliers = getSuppliers();
-  const parts = getParts();
-  const countBySupplier = new Map<string, number>();
-  for (const p of parts as any[]) countBySupplier.set(p.supplierId, (countBySupplier.get(p.supplierId) ?? 0) + 1);
+export default async function SuppliersPage() {
+  const suppliers = await listSuppliers({ limit: 500 });
 
   return (
     <section className="p-6 space-y-4">
@@ -22,14 +19,14 @@ export default function SuppliersPage() {
             </tr>
           </thead>
           <tbody>
-            {(suppliers as any[]).map((s) => (
+            {suppliers.map((s) => (
               <tr key={s.id} className="border-t">
                 <td className="px-3 py-2">{s.name}</td>
                 <td className="px-3 py-2">{s.email}</td>
                 <td className="px-3 py-2">{s.phone}</td>
-                <td className="px-3 py-2">{countBySupplier.get(s.id) ?? 0}</td>
-                <td className="px-3 py-2">{s.leadTimeDays ?? "—"} j</td>
-                <td className="px-3 py-2">{s.currency ?? "—"}</td>
+                <td className="px-3 py-2">—</td>
+                <td className="px-3 py-2">{(s as any).lead_time_days ?? "-"} j</td>
+                <td className="px-3 py-2">{s.currency ?? "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -38,4 +35,3 @@ export default function SuppliersPage() {
     </section>
   );
 }
-

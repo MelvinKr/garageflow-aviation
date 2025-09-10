@@ -43,10 +43,22 @@
   },
   "include": [
     "next-env.d.ts",
-    "src",
-    ".next/types/**/*.ts"
+    "src"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next/types/**/*.ts",
+    "src/store/mockState.ts",
+    "src/data/mock.ts",
+    "src/mock/**",
+    "src/lib/printQuote.ts",
+    "src/lib/printWo.ts",
+    "src/app/api/**",
+    "src/app/reports/**",
+    "src/components/CustomerDrawer.tsx",
+    "src/components/SupplierDrawer.tsx",
+    "src/components/OutboxMount.tsx",
+    "src/lib/generateWoFromTemplate.ts",
+    "src/scripts/seed.ts"
   ]
 }

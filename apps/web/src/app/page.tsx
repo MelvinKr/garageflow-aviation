@@ -1,108 +1,63 @@
-"use client";
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getKpis, getParts, getAircraft } from "@/lib/mock";
-import { getReservedMap } from "@/lib/reservedStore";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { KpiCard } from "@/components/KpiCard";
-import { DataTable, type Sorter } from "@/components/DataTable";
 
-export default function Page() {
-  const k = getKpis();
-  const parts = getParts();
-  const [deltas, setDeltas] = useState<Record<string, number>>({});
-  const [reservedMap, setReservedMap] = useState<Record<string, number>>({});
-  const aircraft = getAircraft();
-  const [sorters, setSorters] = useState<Sorter<any>[]>([{ key: "qty", dir: "asc" }]);
+async function count(table: string) {
+  const supabase = await createSupabaseServerClient();
+  const { count: c } = await supabase.from(table).select("*", { count: "exact", head: true });
+  return c ?? 0;
+}
 
-  // Load movements + reserved once
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("gf_movements");
-      const arr: { sku?: string; id?: string; delta: number }[] = raw ? JSON.parse(raw) : [];
-      const agg: Record<string, number> = {};
-      for (const m of arr) {
-        const key = m.sku || m.id;
-        if (!key) continue;
-        agg[key] = (agg[key] || 0) + (Number(m.delta) || 0);
-      }
-      setDeltas(agg);
-    } catch {}
-    try {
-      setReservedMap(getReservedMap());
-    } catch {}
-  }, []);
-
-  const effectiveParts = useMemo(() => {
-    return parts.map((p: any) => {
-      const key = p.sku || p.id;
-      const eff = (p.qty ?? 0) + (deltas[key] || 0);
-      const res = reservedMap[key] ?? p.reservedQty ?? 0;
-      return { ...p, qty: eff - res };
-    });
-  }, [parts, deltas, reservedMap]);
-
-  const topParts = useMemo(() => {
-    return [...effectiveParts]
-      .sort((a: any, b: any) => (a.qty ?? 0) - (b.qty ?? 0))
-      .slice(0, 3);
-  }, [effectiveParts]);
-
-  const lowToOrder = useMemo(() => {
-    return [...effectiveParts]
-      .filter((p: any) => (p.qty ?? 0) <= (p.minQty ?? 0))
-      .sort((a: any, b: any) => (a.qty ?? 0) - (b.qty ?? 0))
-      .slice(0, 5);
-  }, [effectiveParts]);
-
-  const currency = (n: number) => `${n.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
-  const effectiveStockValue = useMemo(() => {
-    return effectiveParts.reduce((acc: number, p: any) => acc + Math.max(0, Number(p.qty) || 0) * (Number(p.unitCost) || 0), 0);
-  }, [effectiveParts]);
+export default async function Page() {
+  const supabase = await createSupabaseServerClient();
+  const [partsCount, aircraftCount] = await Promise.all([
+    count("parts"),
+    count("aircraft"),
+  ]);
+  const { data: partsList } = await supabase
+    .from("parts")
+    .select("id,part_number,name,on_hand,min_stock")
+    .limit(1000);
+  const parts = (partsList ?? []).map((p: any) => ({
+    id: p.id,
+    sku: p.part_number,
+    name: p.name,
+    qty: Number(p.on_hand ?? 0),
+    minQty: Number(p.min_stock ?? 0),
+  }));
+  const lowToOrder = parts
+    .filter((p) => (p.qty ?? 0) <= (p.minQty ?? 0))
+    .sort((a, b) => (a.qty ?? 0) - (b.qty ?? 0))
+    .slice(0, 5);
+  const topLow = [...parts].sort((a, b) => (a.qty ?? 0) - (b.qty ?? 0)).slice(0, 3);
 
   return (
     <main className="p-8 space-y-8">
       <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <KpiCard
-          icon={<BagIcon />}
-          label="Pièces"
-          value={parts.length}
-          accent="orange"
-        />
-        <KpiCard
-          icon={<PlaneIcon />}
-          label="Avions"
-          value={aircraft.length}
-          accent="slate"
-        />
-        <KpiCard
-          icon={<CoinIcon />}
-          label="Valeur stock"
-          value={currency(effectiveStockValue)}
-          accent="orange"
-        />
+        <KpiCard icon={<BagIcon />} label="Pièces" value={partsCount} accent="orange" />
+        <KpiCard icon={<PlaneIcon />} label="Avions" value={aircraftCount} accent="slate" />
+        <KpiCard icon={<CoinIcon />} label="Valeur stock" value="—" accent="orange" />
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Top Pièces</h2>
+        <h2 className="text-xl font-semibold">Top pièces (stock bas)</h2>
         <div className="rounded-2xl border bg-white shadow-sm">
-          <DataTable
-            rows={topParts}
-            cols={[
-              { key: "sku" as any, label: "SKU" },
-              { key: "name" as any, label: "Nom" },
-              { key: "category" as any, label: "Cat." },
-              { key: "cert" as any, label: "Certif." },
-              { key: "qty" as any, label: "Qté" },
-              { key: "minQty" as any, label: "Min" },
-              { key: "location" as any, label: "Emplacement" },
-            ]}
-            sortable
-            multiSort={false}
-            sorters={sorters}
-            onSortChange={setSorters}
-          />
+          <ul className="divide-y">
+            {topLow.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-4 py-2 px-3 text-sm">
+                <div className="min-w-0">
+                  <div className="font-medium text-slate-800 truncate">{p.name}</div>
+                  <div className="text-slate-500">{p.sku}</div>
+                </div>
+                <div className="text-right">
+                  <div className={`${p.qty <= p.minQty ? 'text-red-600' : ''} font-semibold`}>{p.qty} / {p.minQty}</div>
+                  <div className="text-xs text-slate-500">Qté / Seuil</div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -113,11 +68,11 @@ export default function Page() {
             <div className="text-sm text-slate-500">Aucune pièce sous le seuil.</div>
           ) : (
             <ul className="divide-y">
-              {lowToOrder.map((p: any) => (
-                <li key={p.sku || p.id} className="flex items-center justify-between gap-4 py-2 text-sm">
+              {lowToOrder.map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-4 py-2 text-sm">
                   <div className="min-w-0">
                     <div className="font-medium text-slate-800 truncate">{p.name}</div>
-                    <div className="text-slate-500">{p.sku || p.id}</div>
+                    <div className="text-slate-500">{p.sku}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-red-600 font-semibold">{p.qty} / {p.minQty}</div>
@@ -128,12 +83,7 @@ export default function Page() {
             </ul>
           )}
           <div className="pt-3 text-right">
-            <Link
-              href={{ pathname: "/parts", query: { lowStock: "1" } }}
-              className="text-sm font-medium text-blue-700 hover:underline"
-            >
-              Voir toutes
-            </Link>
+            <Link href={{ pathname: "/parts", query: { lowStock: "1" } } as any} className="text-sm font-medium text-blue-700 hover:underline">Voir toutes</Link>
           </div>
         </div>
       </section>

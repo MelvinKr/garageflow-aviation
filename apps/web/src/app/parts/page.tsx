@@ -1,9 +1,10 @@
 import PartsClient from "./PartsClient";
-import { listPartsAction } from "./actions";
+import { listPartsAction, createMovementAction } from "./actions";
 import { toCSV, downloadCSV } from "@/lib/csv";
 
-export default async function PartsPage({ searchParams }: { searchParams?: { lowStock?: string } }) {
-  const onlyLow = searchParams?.lowStock === "1";
+export default async function PartsPage({ searchParams }: { searchParams?: Promise<{ lowStock?: string }> }) {
+  const sp = (await (searchParams ?? Promise.resolve({}))) as any;
+  const onlyLow = sp?.lowStock === "1";
   const parts = await listPartsAction({ limit: 200 });
   const rows = parts
     .map((p) => ({
@@ -32,8 +33,16 @@ export default async function PartsPage({ searchParams }: { searchParams?: { low
         </nav>
       </div>
 
-      <PartsClient rows={rows as any} />
+      <PartsClient
+        rows={rows as any}
+        movementAction={async (fd: FormData) => {
+          "use server";
+          const part_id = String(fd.get("part_id") || "");
+          const type = String(fd.get("type") || "OUT") as any;
+          const quantity = Number(fd.get("quantity") || 1);
+          await createMovementAction({ part_id, type, quantity, note: "Action rapide" });
+        }}
+      />
     </section>
   );
 }
-

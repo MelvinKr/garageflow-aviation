@@ -18,7 +18,7 @@ export function getDb() {
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
   });
-  _pool.on("error", (err) => {
+  _pool.on("error", (err: unknown) => {
     console.error("PG pool error:", err);
   });
 

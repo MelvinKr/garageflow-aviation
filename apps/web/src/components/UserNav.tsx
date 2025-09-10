@@ -62,7 +62,7 @@ export default function UserNav() {
     return (
       <button
         className="text-sm underline"
-        onClick={() => r.push("/auth?next=" + encodeURIComponent(location.pathname))}
+        onClick={() => r.push(("/auth?next=" + encodeURIComponent(location.pathname)) as any)}
         title="Se connecter"
       >
         Se connecter
@@ -73,7 +73,7 @@ export default function UserNav() {
   async function logout() {
     await supabase.auth.signOut();
     setOpen(false);
-    r.push("/auth");
+    r.push("/auth" as any);
   }
 
   return (
