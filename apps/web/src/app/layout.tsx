@@ -4,6 +4,7 @@ import { SidebarNav } from "@/components/SidebarNav";
 import { ToastProvider } from "@/components/ui/useToast";
 import ToastContainer from "@/components/ui/ToastContainer";
 import OutboxMount from "@/components/OutboxMount";
+import UserNav from "@/components/UserNav";
 
 export const metadata = { title: "GarageFlow Aviation" };
 
@@ -14,7 +15,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ToastProvider>
           <OutboxMount />
           <SidebarNav />
-          <main className="flex-1">
+          <main className="flex-1 min-h-screen">
+            <header className="h-12 border-b flex items-center justify-between px-4 bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/50">
+              <div className="font-semibold">GarageFlow</div>
+              <UserNav />
+            </header>
             {children}
           </main>
           <ToastContainer />
