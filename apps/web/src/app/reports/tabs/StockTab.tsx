@@ -2,16 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { computeEMA, restockSuggestion } from "@/lib/ema";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
 
 type Part = {
   partId: number | null;
@@ -39,26 +30,31 @@ function lastNMonthsLabels(n: number): string[] {
 
 export default function StockTab() {
   const sp = useSearchParams();
-  const months = Number(sp.get("months") ?? 12);
-  const alpha = Number(sp.get("alpha") ?? 0.5);
+  const months = sp.get("months") ?? "12";
+  const alpha = sp.get("alpha") ?? "0.5";
 
   const [parts, setParts] = useState<Part[]>([]);
   const [axis, setAxis] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
     const ac = new AbortController();
     setLoading(true);
+    setError(null);
     fetch(`/api/reports/stock?months=${months}&alpha=${alpha}`, { cache: "no-store", signal: ac.signal })
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`${r.status} ${r.statusText}: ${await r.text()}`);
+        return r.json();
+      })
       .then((j) => {
         const rows = j.parts ?? j.rows ?? [];
         const axis = j.monthsAxis ?? lastNMonthsLabels(Number(j.months ?? months));
-        // Normalize rows to Part shape
-        const ps: Part[] = rows.map((r: any, i: number) => {
+        const a = Number(alpha);
+        const ps: Part[] = (rows as any[]).map((r: any, i: number) => {
           const qty: number[] = r.qty ?? r.monthlyConsumption ?? [];
-          const emaArr: number[] = r.ema ?? r.emaSeries ?? computeEMA(qty, alpha);
+          const emaArr: number[] = r.ema ?? r.emaSeries ?? computeEMA(qty, a);
           const onHand = Number(r.onHand ?? r.on_hand ?? 0);
           const minStock = Number(r.minStock ?? r.min_stock ?? 0);
           const sugg = restockSuggestion({ onHand, ema: emaArr.at(-1) ?? 0, minStock });
@@ -78,19 +74,20 @@ export default function StockTab() {
         setParts(ps);
         setAxis(axis);
       })
+      .catch((e) => setError(String(e)))
       .finally(() => setLoading(false));
     return () => ac.abort();
   }, [months, alpha]);
 
-  const p = parts[idx];
+  if (loading) return <p className="p-4">Chargement…</p>;
+  if (error) return <p className="p-4 text-red-600">Erreur: {error}</p>;
+  if (!parts.length) return <p className="p-4">Aucune donnée.</p>;
 
-  const chartData = useMemo(() => {
-    if (!p) return [] as any[];
-    return axis.map((ym, i) => ({ ym, qty: p.qty[i] ?? 0, ema: p.ema[i] ?? 0 }));
-  }, [axis, p]);
-
-  if (loading) return <p>Chargement…</p>;
-  if (!parts.length) return <p>Aucune donnée.</p>;
+  const p = parts[Math.min(idx, parts.length - 1)];
+  const data = useMemo(
+    () => axis.map((ym, i) => ({ ym, qty: p.qty[i] ?? 0, ema: p.ema[i] ?? 0 })),
+    [axis, p]
+  );
 
   return (
     <div className="space-y-4">
@@ -115,7 +112,7 @@ export default function StockTab() {
 
       <div style={{ width: "100%", height: 320 }}>
         <ResponsiveContainer>
-          <LineChart data={chartData as any}>
+          <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="ym" />
             <YAxis />
@@ -129,4 +126,3 @@ export default function StockTab() {
     </div>
   );
 }
-
