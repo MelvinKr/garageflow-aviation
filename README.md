@@ -39,7 +39,6 @@
 ## 📂 Structure du projet
 
 ```
-
 apps/web/
 src/
 app/ # Pages Next.js (App Router)
@@ -87,8 +86,8 @@ L’application sera dispo sur 👉 http://localhost:3000
 - [x] Liste pièces + filtres, badges low-stock
 - [x] Widget Dashboard “À commander”
 - [x] Drawer détail pièce (édition inline, certificat, photo, commande fournisseur)
-- [ ] Historique des mouvements stock (entrées/sorties mockées)
-- [ ] Réservation liée aux devis/WO (sera finalisée en phase 3)
+- [x] Historique des mouvements stock (entrées/sorties mockées)
+- [x] Réservation liée aux devis/WO (sera finalisée en phase 3)
 
 ### ⏳ Phase 2 – Avions & Clients/Fournisseurs (à démarrer)
 - [x] Liste avions (immat, type, heures, maintenances dues)
