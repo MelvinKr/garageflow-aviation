@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useMockState, mockUpload, Part } from "@/store/mockState";
+import { useMockState, Part } from "@/store/mockState";
 import suppliers from "@/mock/suppliers.json";
 import PartLinks from "@/components/PartLinks";
+import { uploadPublic } from "@/lib/storage";
+import { useToast } from "@/components/ui/useToast";
 
 type Props = { id: string; onClose: () => void };
 
-function Labeled({children,label}:{children:React.ReactNode,label:string}) {
+function Labeled({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <label className="text-sm grid gap-1">
       <span className="text-gray-500">{label}</span>
@@ -18,10 +20,13 @@ function Labeled({children,label}:{children:React.ReactNode,label:string}) {
 
 export function PartDrawer({ id, onClose }: Props) {
   const { parts, updatePart } = useMockState();
+  const { push } = useToast();
   const original = useMemo(() => parts.find((p) => p.id === id), [parts, id]);
   const [draft, setDraft] = useState<Partial<Part> | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [certFile, setCertFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (original) {
@@ -43,12 +48,12 @@ export function PartDrawer({ id, onClose }: Props) {
 
   function buildMailTo() {
     const email = supplier?.email ?? "orders@example.com";
-    const subject = encodeURIComponent(`Commande ${draft.sku} – ${draft.name}`);
+    const subject = encodeURIComponent(`Commande ${draft.sku} - ${draft.name}`);
     const suggest = Math.max(min * 2 - dispo, min - dispo + 1, 1);
     const body = encodeURIComponent(
-`Bonjour,
+      `Bonjour,
 
-Merci de nous confirmer la dispo et le délai sur l’article:
+Merci de nous confirmer la dispo et le délai sur l'article:
 - SKU: ${draft.sku}
 - Nom: ${draft.name}
 - Certification: ${(draft as any).cert ?? "-"}
@@ -64,21 +69,34 @@ GarageFlow Aviation`
     return `mailto:${email}?subject=${subject}&body=${body}`;
   }
 
-  async function onPhotoChoose(file?: File) {
-    if (!file) return;
-    setUploading(true);
-    try {
-      const url = await mockUpload(file);
-      set("photoUrl" as any, url as any);
-    } finally {
-      setUploading(false);
-    }
-  }
-
   async function onSave() {
     setSaving(true);
     try {
-      updatePart(original.id, draft as any);
+      const patch: any = { ...(draft as any) };
+      if (photoFile) {
+        try {
+          setUploading(true);
+          const url = await uploadPublic("parts", photoFile, String((draft as any).sku ?? original.sku));
+          patch.photoUrl = url;
+        } catch (e: any) {
+          push({ type: "error", message: e?.message ?? "Upload photo échoué" });
+        } finally {
+          setUploading(false);
+        }
+      }
+      if (certFile) {
+        try {
+          setUploading(true);
+          const url = await uploadPublic("certs", certFile, String((draft as any).sku ?? original.sku));
+          patch.certUrl = url;
+        } catch (e: any) {
+          push({ type: "error", message: e?.message ?? "Upload certificat échoué" });
+        } finally {
+          setUploading(false);
+        }
+      }
+      updatePart(original.id, patch as any);
+      push({ type: "success", message: "Pièce sauvegardée" });
       onClose();
     } finally {
       setSaving(false);
@@ -107,8 +125,9 @@ GarageFlow Aviation`
           <div className="w-full h-40 grid place-items-center border rounded text-gray-400">Aucune photo</div>
         )}
         <label className="mt-2 inline-flex items-center gap-2 text-sm cursor-pointer">
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => onPhotoChoose(e.target.files?.[0])} />
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
           <span className="px-3 py-1 rounded border hover:bg-gray-50">{uploading ? "Téléversement..." : "Joindre/Changer photo"}</span>
+          {photoFile && <span className="text-xs text-gray-600">{photoFile.name}</span>}
         </label>
       </div>
 
@@ -133,10 +152,15 @@ GarageFlow Aviation`
 
       {/* Statut + actions */}
       <div className="mt-4 text-sm">Disponible: <b className={dispo <= min ? "text-red-600" : ""}>{dispo}</b> (min {min})</div>
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2 items-center">
         <a href={buildMailTo()} className="px-3 py-1 rounded border hover:bg-gray-50">Commander</a>
         {supplier?.email && (<a href={`mailto:${supplier.email}`} className="px-3 py-1 rounded border hover:bg-gray-50">Contacter fournisseur</a>)}
         {(draft as any).certUrl && (<a href={(draft as any).certUrl as any} target="_blank" className="px-3 py-1 rounded border hover:bg-gray-50">Voir certificat</a>)}
+        <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+          <input type="file" accept=".pdf,image/*" className="hidden" onChange={(e) => setCertFile(e.target.files?.[0] ?? null)} />
+          <span className="px-3 py-1 rounded border hover:bg-gray-50">Joindre/Changer certificat</span>
+          {certFile && <span className="text-xs text-gray-600">{certFile.name}</span>}
+        </label>
       </div>
 
       {/* Liens cross-refs */}
@@ -150,3 +174,4 @@ GarageFlow Aviation`
     </div>
   );
 }
+
