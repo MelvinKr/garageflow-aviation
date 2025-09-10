@@ -7,7 +7,7 @@ export const Repos = (() => {
   if (isServer && backend === "DB") {
     // lazy import server-only implementation when on server
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const db = require("./db");
+    const db = require("./db.server");
     return {
       parts: db.partsRepoDb,
       quotes: db.quotesRepoDb,
