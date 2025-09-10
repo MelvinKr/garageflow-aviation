@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
-import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const months = Math.max(1, Math.min(24, Number(searchParams.get("months") ?? 12)));
     const db = getDb();
-    const rows = await db.execute(sql`
+    const q = `
       with months as (
         select to_char(date_trunc('month', now()) - (n || ' months')::interval, 'YYYY-MM') as ym
-        from generate_series(0,11) as t(n)
+        from generate_series(0, ${months - 1}) as t(n)
         order by ym
       )
       select mo.ym as month,
@@ -23,13 +24,11 @@ export async function GET() {
         or (w.closed_at is not null and to_char(date_trunc('month', w.closed_at),'YYYY-MM') = mo.ym)
       )
       group by mo.ym
-      order by mo.ym;
-    `);
-    // @ts-ignore
-    return NextResponse.json(rows.rows ?? rows);
+      order by mo.ym;`;
+    const res: any = await db.execute(q as any);
+    return NextResponse.json(res.rows ?? res);
   } catch (e) {
     console.error(e);
     return NextResponse.json([], { status: 200 });
   }
 }
-
