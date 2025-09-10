@@ -17,7 +17,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   const active = pathname === href || pathname.startsWith(href + "/");
   return (
     <Link
-      href={href}
+      href={href as any}
       className={`flex items-center gap-2 px-3 py-2 rounded transition ${
         active ? "bg-gray-200 font-medium" : "hover:bg-gray-100"
       }`}
@@ -47,7 +47,7 @@ export default function SidebarClient({
         <NavLink href="/customers">Clients</NavLink>
         <NavLink href="/suppliers">Fournisseurs</NavLink>
         <NavLink href="/quotes">Devis</NavLink>
-        <NavLink href="/workorders">Réparations</NavLink>
+        <NavLink href="/work-orders">Réparations</NavLink>
         <NavLink href="/purchase-orders">PO</NavLink>
         <NavLink href="/templates">Templates</NavLink>
 
@@ -72,3 +72,4 @@ export default function SidebarClient({
     </aside>
   );
 }
+
