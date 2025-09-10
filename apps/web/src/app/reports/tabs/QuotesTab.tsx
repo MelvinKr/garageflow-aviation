@@ -1,19 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-  BarChart,
-  Bar,
-  ResponsiveContainer,
-  YAxisProps,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend, BarChart, Bar, ResponsiveContainer, YAxisProps } from "recharts";
 
 type QuotePoint = { ym: string; count: number; total: number; conversion: number };
 
@@ -22,14 +10,19 @@ export default function QuotesTab() {
   const months = sp.get("months") ?? "12";
   const [items, setItems] = useState<QuotePoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const ac = new AbortController();
     setLoading(true);
+    setError(null);
     fetch(`/api/reports/quotes?months=${months}`, { cache: "no-store", signal: ac.signal })
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`${r.status} ${r.statusText}: ${await r.text()}`);
+        return r.json();
+      })
       .then((j) => {
-        const rows = j.items ?? j; // our API returns array
+        const rows = j.items ?? j;
         const mapped: QuotePoint[] = (rows as any[]).map((r) => ({
           ym: r.ym ?? r.month,
           count: Number(r.count ?? 0),
@@ -38,13 +31,15 @@ export default function QuotesTab() {
         }));
         setItems(mapped);
       })
+      .catch((e) => setError(String(e)))
       .finally(() => setLoading(false));
     return () => ac.abort();
   }, [months]);
 
   const totalYProps: YAxisProps = useMemo(() => ({ domain: [0, (d: any) => Math.ceil(d * 1.2)] }), []);
-  if (loading) return <p>Chargement…</p>;
-  if (!items.length) return <p>Aucune donnée.</p>;
+  if (loading) return <p className="p-4">Chargement…</p>;
+  if (error) return <p className="p-4 text-red-600">Erreur: {error}</p>;
+  if (!items.length) return <p className="p-4">Aucune donnée.</p>;
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
@@ -84,4 +79,3 @@ export default function QuotesTab() {
     </div>
   );
 }
-

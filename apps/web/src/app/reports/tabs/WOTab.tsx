@@ -1,18 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 
 type WO = { ym: string; opened: number; closed: number; avgCycleDays: number };
 
@@ -21,14 +10,19 @@ export default function WOTab() {
   const months = sp.get("months") ?? "12";
   const [items, setItems] = useState<WO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const ac = new AbortController();
     setLoading(true);
+    setError(null);
     fetch(`/api/reports/wo?months=${months}`, { cache: "no-store", signal: ac.signal })
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`${r.status} ${r.statusText}: ${await r.text()}`);
+        return r.json();
+      })
       .then((j) => {
-        const rows = j.items ?? j; // our API returns array
+        const rows = j.items ?? j;
         const mapped: WO[] = (rows as any[]).map((r) => ({
           ym: r.ym ?? r.month,
           opened: Number(r.opened ?? 0),
@@ -37,12 +31,14 @@ export default function WOTab() {
         }));
         setItems(mapped);
       })
+      .catch((e) => setError(String(e)))
       .finally(() => setLoading(false));
     return () => ac.abort();
   }, [months]);
 
-  if (loading) return <p>Chargement…</p>;
-  if (!items.length) return <p>Aucune donnée.</p>;
+  if (loading) return <p className="p-4">Chargement…</p>;
+  if (error) return <p className="p-4 text-red-600">Erreur: {error}</p>;
+  if (!items.length) return <p className="p-4">Aucune donnée.</p>;
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
@@ -81,4 +77,3 @@ export default function WOTab() {
     </div>
   );
 }
-
