@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import ManagerOnly from "@/components/ManagerOnly";
-import { ExportButtons } from "@/components/ExportButtons";
+import ExportButtons from "./ExportButtons";
 import { computeEMA, restockSuggestion } from "@/lib/ema";
 import type { StockKPI, QuoteKPI, WOKPI } from "@/lib/reportTypes";
 import { useSearchParams } from "next/navigation";
