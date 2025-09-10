@@ -15,4 +15,3 @@ export async function getDb() {
   _db = drizzle(client);
   return _db;
 }
-
