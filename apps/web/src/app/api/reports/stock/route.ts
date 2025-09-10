@@ -17,21 +17,20 @@ export async function GET(req: Request) {
         from generate_series(0, ${months - 1}) as t(n)
         order by ym
       )
-      select p.sku as "partNumber",
+      select p.part_number as "partNumber",
              p.name,
-             coalesce(p.qty, 0)::int as "onHand",
-             coalesce(p.min_qty, 0)::int as "minStock",
+             coalesce(p.on_hand, 0)::int as "onHand",
+             coalesce(p.min_stock, 0)::int as "minStock",
              array(
-               select coalesce(sum(case when m.type = 'OUT' then m.qty else 0 end),0)::int
+               select coalesce(sum(case when m.type = 'CONSUME' then m.quantity else 0 end),0)::int
                from months mo
                left join movements m on m.part_id = p.id
-                 and to_char(date_trunc('month', m.at), 'YYYY-MM') = mo.ym
-                 and m.at >= date_trunc('month', now()) - interval '${months - 1} months'
+                 and to_char(date_trunc('month', m.created_at), 'YYYY-MM') = mo.ym
                group by mo.ym
                order by mo.ym
              ) as "monthlyConsumption"
       from parts p
-      order by p.sku
+      order by p.part_number
       limit 200;`;
 
     const res: any = await db.execute(q as any);

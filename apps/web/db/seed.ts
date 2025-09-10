@@ -8,11 +8,9 @@ async function main() {
   const existing: any = await db.execute(sql`SELECT id FROM parts LIMIT 1;`);
   if (!existing?.rows?.length) {
     await db.insert(parts).values([
-      { partNumber: "OIL-FILT-3200", name: "Oil Filter 3200", onHand: 14, minStock: 10 },
-      { partNumber: "SPARK-PLUG-A1", name: "Spark Plug A1", onHand: 40, minStock: 25 },
-      { partNumber: "HYD-HOSE-8mm", name: "Hydraulic Hose 8mm", onHand: 5, minStock: 12 },
-      { partNumber: "BRAKE-PAD-L", name: "Brake Pad Large", onHand: 22, minStock: 15 },
-      { partNumber: "SEAL-PAINT-1L", name: "Seal Paint 1L", onHand: 9, minStock: 8 },
+      { partNumber: "P-0001", name: "Filtre à huile IO-540", onHand: 12, minStock: 5 },
+      { partNumber: "P-0002", name: "Bougie aviation REM37BY", onHand: 40, minStock: 20 },
+      { partNumber: "CLEV-66-105", name: "Plaquette de frein (Cessna)", onHand: 2, minStock: 6 },
     ]);
   }
 
@@ -71,4 +69,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-

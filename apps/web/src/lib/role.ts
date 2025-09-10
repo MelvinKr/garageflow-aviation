@@ -1,5 +1,5 @@
 "use client";
-import { supabase } from "./supabase";
+import { supabase } from "./supabase-client";
 
 export async function getRole() {
   const { data } = await supabase.auth.getUser();
@@ -8,4 +8,3 @@ export async function getRole() {
 export async function isManager() {
   return (await getRole()) === "manager";
 }
-

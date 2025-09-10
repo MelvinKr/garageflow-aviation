@@ -11,11 +11,12 @@ function pct(a: number, b: number) {
 }
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+  const url = new URL(req.url);
+  const { searchParams } = url;
   const months = searchParams.get("months") ?? "12";
   const alpha = searchParams.get("alpha") ?? "0.5";
 
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  const base = process.env.NEXT_PUBLIC_BASE_URL || url.origin;
   const [stock, quotes, wo] = await Promise.all([
     fetch(`${base}/api/reports/stock?months=${months}&alpha=${alpha}`).then((r) => r.json()),
     fetch(`${base}/api/reports/quotes?months=${months}`).then((r) => r.json()),
@@ -69,4 +70,3 @@ export async function GET(req: Request) {
   const report = lines.join("\n");
   return NextResponse.json({ months, alpha, risky, quoteTrend, convAvg, backlog, cycleAvg, report });
 }
-

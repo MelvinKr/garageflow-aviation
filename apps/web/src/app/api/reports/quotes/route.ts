@@ -16,8 +16,8 @@ export async function GET(req: Request) {
       )
       select mo.ym as month,
              count(q.id)::int as count,
-             0::float as total,
-             coalesce(avg(case when q.status = 'accepted' then 1.0 else 0.0 end),0)::float as "conversionRate"
+             coalesce(sum(q.total_amount),0)::float as total,
+             coalesce(avg(case when q.status = 'ACCEPTED' then 1.0 else 0.0 end),0)::float as "conversionRate"
       from months mo
       left join quotes q
         on to_char(date_trunc('month', q.created_at),'YYYY-MM') = mo.ym

@@ -1,5 +1,5 @@
 "use client";
-import { supabase } from "./supabase";
+import { supabase } from "./supabase-client";
 
 export async function uploadPublic(bucket: string, file: File, pathPrefix: string) {
   const ext = file.name.split(".").pop() || "bin";
@@ -9,4 +9,3 @@ export async function uploadPublic(bucket: string, file: File, pathPrefix: strin
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
 }
-

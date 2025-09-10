@@ -7,7 +7,7 @@ export function getDb() {
   if (_db) return _db;
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL manquant");
-  const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
+  const client = new Client({ connectionString: url, keepAlive: true, ssl: { rejectUnauthorized: false } });
   // important: connexion au runtime serveur (server actions / RSC)
   // @ts-ignore
   client.connect();

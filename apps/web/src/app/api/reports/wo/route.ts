@@ -15,12 +15,12 @@ export async function GET(req: Request) {
         order by ym
       )
       select mo.ym as month,
-             count(case when to_char(date_trunc('month', w.opened_at),'YYYY-MM') = mo.ym then 1 end)::int as opened,
+             count(case when to_char(date_trunc('month', w.created_at),'YYYY-MM') = mo.ym then 1 end)::int as opened,
              count(case when w.closed_at is not null and to_char(date_trunc('month', w.closed_at),'YYYY-MM') = mo.ym then 1 end)::int as closed,
-             coalesce(avg(case when w.closed_at is not null then extract(day from (w.closed_at - w.opened_at)) end),0)::float as "avgCycleDays"
+             coalesce(avg(case when w.closed_at is not null then extract(day from (w.closed_at - w.created_at)) end),0)::float as "avgCycleDays"
       from months mo
-      left join workorders w on (
-        to_char(date_trunc('month', w.opened_at),'YYYY-MM') = mo.ym
+      left join work_orders w on (
+        to_char(date_trunc('month', w.created_at),'YYYY-MM') = mo.ym
         or (w.closed_at is not null and to_char(date_trunc('month', w.closed_at),'YYYY-MM') = mo.ym)
       )
       group by mo.ym

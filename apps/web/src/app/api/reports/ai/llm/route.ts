@@ -5,11 +5,12 @@ import { buildReportPrompt } from "@/lib/aiReport";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+  const url = new URL(req.url);
+  const { searchParams } = url;
   const months = Number(searchParams.get("months") ?? 12);
   const alpha = Number(searchParams.get("alpha") ?? 0.5);
 
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+  const base = process.env.NEXT_PUBLIC_BASE_URL || url.origin;
   const [stock, quotes, wo] = await Promise.all([
     fetch(`${base}/api/reports/stock?months=${months}&alpha=${alpha}`).then((r) => r.json()),
     fetch(`${base}/api/reports/quotes?months=${months}`).then((r) => r.json()),
@@ -40,4 +41,3 @@ export async function GET(req: Request) {
   const markdown = completion.choices[0]?.message?.content ?? "Aucun contenu.";
   return NextResponse.json({ months, alpha, model, markdown });
 }
-

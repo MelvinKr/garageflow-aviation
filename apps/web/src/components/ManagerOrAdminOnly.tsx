@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-client";
 
 export default function ManagerOrAdminOnly({ children }: { children: React.ReactNode }) {
   const [ok, setOk] = useState<boolean | null>(null);
@@ -15,4 +15,3 @@ export default function ManagerOrAdminOnly({ children }: { children: React.React
   if (!ok) return <div className="p-6 text-sm text-red-600">Accès réservé aux managers ou admins.</div>;
   return <>{children}</>;
 }
-
