@@ -27,6 +27,7 @@ export function SidebarNav() {
           { href: "/reports", label: "Rapports", icon: <ChartIcon /> },
           { href: "/reports/overview", label: "Rapports — Overview", icon: <ChartIcon /> },
           { href: "/reports/ai-llm", label: "Rapport IA (LLM)", icon: <ChartIcon /> },
+          { href: "/reports/ai-ask", label: "Ask IA (RAG)", icon: <span>🔎</span> },
           { href: "/admin/roles", label: "Admin → Rôles", icon: <UsersIcon /> },
           { href: "/purchase-orders", label: "PO", icon: <StoreIcon /> },
           { href: "/templates", label: "Templates", icon: <WrenchIcon /> },
