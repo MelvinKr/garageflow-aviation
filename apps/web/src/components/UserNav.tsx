@@ -18,6 +18,7 @@ export default function UserNav() {
   const r = useRouter();
   const [user, setUser] = useState<SUser | null>(null);
   const [open, setOpen] = useState(false);
+  const [role, setRole] = useState<string>("mechanic");
 
   useEffect(() => {
     let mounted = true;
@@ -26,10 +27,12 @@ export default function UserNav() {
       const { data } = await supabase.auth.getUser();
       if (!mounted) return;
       setUser(data.user ? { id: data.user.id, email: data.user.email } : null);
+      setRole((data.user?.user_metadata as any)?.role || "mechanic");
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
+      setRole((session?.user?.user_metadata as any)?.role || "mechanic");
     });
 
     return () => {
@@ -82,6 +85,7 @@ export default function UserNav() {
           <div className="px-3 py-2 border-b">
             <div className="text-xs text-gray-500">Connecté</div>
             <div className="text-sm truncate">{user.email}</div>
+            <span className="mt-1 inline-block text-[11px] px-2 py-0.5 rounded-full border bg-gray-50">{role}</span>
           </div>
           <button
             className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
@@ -99,4 +103,3 @@ export default function UserNav() {
     </div>
   );
 }
-

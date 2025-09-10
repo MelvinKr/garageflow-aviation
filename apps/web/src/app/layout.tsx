@@ -11,6 +11,10 @@ export const metadata = { title: "GarageFlow Aviation" };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#111827" />
+      </head>
       <body className="min-h-screen flex bg-neutral-50 text-slate-900">
         <ToastProvider>
           <OutboxMount />
@@ -24,6 +28,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </main>
           <ToastContainer />
         </ToastProvider>
+        <script dangerouslySetInnerHTML={{__html: `
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+}
+`}} />
       </body>
     </html>
   );
