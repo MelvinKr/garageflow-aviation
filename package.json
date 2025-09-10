@@ -10,13 +10,21 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "db:studio": "drizzle-kit studio",
+    "db:introspect": "drizzle-kit introspect:pg",
+    "db:seed": "tsx infra/seed.ts"
   },
   "devDependencies": {
-    "turbo": "^2.5.6"
+    "dotenv": "^17.2.2",
+    "drizzle-kit": "^0.31.4",
+    "turbo": "^2.5.6",
+    "tsx": "^4.19.2",
+    "drizzle-orm": "^0.31.0"
   },
-  "packageManager": "npm@10.9.3",
+  "packageManager": "pnpm@9.12.0",
   "dependencies": {
-    "pdfkit": "^0.17.2"
+    "pdfkit": "^0.17.2",
+    "postgres": "3.4.5"
   }
 }
