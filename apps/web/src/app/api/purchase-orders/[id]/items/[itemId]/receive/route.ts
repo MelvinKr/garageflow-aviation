@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Repos } from "@/data";
+import { Repos } from "@/data/server";
 
 export async function POST(req: Request, { params }: { params: { id: string; itemId: string } }) {
   try {
@@ -10,4 +10,3 @@ export async function POST(req: Request, { params }: { params: { id: string; ite
     return NextResponse.json({ ok: false, error: e?.message ?? "error" }, { status: 400 });
   }
 }
-
