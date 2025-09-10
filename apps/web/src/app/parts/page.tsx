@@ -1,4 +1,4 @@
-import { getParts } from "@/lib/mock";
+"use client";
 import PartsClient from "./PartsClient";
 import { getParts } from "@/lib/mock";
 import { toCSV, downloadCSV } from "@/lib/csv";

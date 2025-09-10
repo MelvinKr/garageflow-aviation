@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMockState, mockUpload, Part } from "@/store/mockState";
 import suppliers from "@/mock/suppliers.json";
+import PartLinks from "@/components/PartLinks";
 
 type Props = { id: string; onClose: () => void };
 
@@ -138,6 +139,9 @@ GarageFlow Aviation`
         {(draft as any).certUrl && (<a href={(draft as any).certUrl as any} target="_blank" className="px-3 py-1 rounded border hover:bg-gray-50">Voir certificat</a>)}
       </div>
 
+      {/* Liens cross-refs */}
+      <PartLinks partId={original.id} />
+
       {/* Boutons Sauvegarder / Annuler */}
       <div className="mt-6 flex gap-2">
         <button onClick={onSave} disabled={saving} className="px-3 py-1 rounded bg-black text-white hover:opacity-90 disabled:opacity-50">{saving ? "Sauvegarde..." : "Sauvegarder les modifs"}</button>
@@ -146,4 +150,3 @@ GarageFlow Aviation`
     </div>
   );
 }
-

@@ -1,9 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
   transpilePackages: [
     '@garageflow/ui',
     '@garageflow/db',
@@ -12,4 +10,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
