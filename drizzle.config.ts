@@ -1,12 +1,12 @@
-import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./apps/web/db/schema.ts",
-  out: "./apps/web/db/migrations",
+  out: "./drizzle",
+  schema: "./drizzle/schema.ts", // adapte si besoin
   dbCredentials: {
     url: process.env.DATABASE_URL!,
+    // 👇 Drizzle Kit transmettra ceci à node-postgres
     ssl: { rejectUnauthorized: false },
   },
 });
