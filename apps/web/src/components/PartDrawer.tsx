@@ -32,7 +32,7 @@ export function PartDrawer({ id, onClose }: Props) {
     if (original) {
       setDraft({ ...original } as any);
     }
-  }, [original?.id]);
+  }, [original]);
 
   if (!original || !draft) return null;
 
@@ -174,4 +174,3 @@ GarageFlow Aviation`
     </div>
   );
 }
-

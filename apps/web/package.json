@@ -23,6 +23,7 @@
     "@zxing/browser": "^0.1.5",
     "dexie": "^4.0.8",
     "drizzle-orm": "^0.31.0",
+    "pg": "^8.11.5",
     "idb-keyval": "^6.2.2",
     "next": "^15.0.0",
     "react": "^19.0.0",

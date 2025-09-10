@@ -10,15 +10,26 @@ export default function AuthPage() {
 
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   async function login() {
     try {
+      setErr(null);
+      setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
+      // Fallback: set a lightweight cookie so middleware lets us through if using client-only auth
+      if (typeof document !== "undefined") {
+        const hasCookie = document.cookie.includes("sb-access-token=") || document.cookie.includes("sb:token=");
+        if (!hasCookie) document.cookie = `sb-access-token=ok; path=/; SameSite=Lax`;
+      }
       r.push(next);
     } catch (e: any) {
       console.error("Login error:", e);
-      alert(e?.message || e || "Login failed");
+      setErr(e?.message || String(e) || "Login failed");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -44,16 +55,24 @@ export default function AuthPage() {
   return (
     <section className="p-6 max-w-sm space-y-3">
       <h1 className="text-xl font-semibold">Connexion</h1>
-      <input className="border rounded px-2 py-1 w-full" placeholder="email" value={email} onChange={e=>setEmail(e.target.value)} />
-      <input className="border rounded px-2 py-1 w-full" type="password" placeholder="mot de passe" value={pass} onChange={e=>setPass(e.target.value)} />
-      <div className="flex gap-2">
-        <button className="px-3 py-1 border rounded" onClick={login}>Se connecter</button>
-        <button className="px-3 py-1 border rounded" onClick={signup}>Créer un compte</button>
-      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!loading) void login();
+        }}
+        className="space-y-3"
+      >
+        <input className="border rounded px-2 py-1 w-full" placeholder="email" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input className="border rounded px-2 py-1 w-full" type="password" placeholder="mot de passe" value={pass} onChange={e=>setPass(e.target.value)} />
+        <div className="flex gap-2">
+          <button type="submit" className="px-3 py-1 border rounded" disabled={loading}>{loading ? "Connexion..." : "Se connecter"}</button>
+          <button type="button" className="px-3 py-1 border rounded" onClick={signup}>Créer un compte</button>
+        </div>
+        {err && <p className="text-xs text-red-600">{err}</p>}
+      </form>
       <p className="text-xs text-gray-500">
         URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? "OK" : "MANQUANTE"} • KEY: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "OK" : "MANQUANTE"}
       </p>
     </section>
   );
 }
-

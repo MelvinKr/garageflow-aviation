@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type Item = { href: string; label: string; icon: React.ReactNode };
 const links: Item[] = [
@@ -15,12 +16,14 @@ const links: Item[] = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <aside className="w-64 bg-[#1f2a37] text-slate-200 min-h-screen">
       <div className="p-5 text-lg font-semibold tracking-tight">GarageFlow</div>
       <nav className="flex flex-col gap-1 p-3 text-sm">
-        {[...links, { href: "/purchase-orders", label: "PO", icon: <StoreIcon /> }].map((item) => {
-          const active = pathname === item.href;
+        {[...links, { href: "/purchase-orders", label: "PO", icon: <StoreIcon /> }, { href: "/templates", label: "Templates", icon: <WrenchIcon /> }].map((item) => {
+          const active = mounted && pathname === item.href;
           return (
             <Link
               key={item.href}
@@ -95,3 +98,4 @@ function WrenchIcon() {
     </svg>
   );
 }
+

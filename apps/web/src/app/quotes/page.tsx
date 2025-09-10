@@ -128,7 +128,7 @@ export default function QuotesPage() {
                   <td className="px-3 py-2">{t.total.toFixed(2)}</td>
                   <td className="px-3 py-2 space-x-2">
                     <button className="text-blue-600 underline" onClick={() => openEdit(q)}>Éditer</button>
-                    <button className="text-blue-600 underline" onClick={() => openPrint(buildQuoteHtml(q))}>PDF</button>
+                    <a className="text-blue-600 underline" href={`/api/quotes/${q.id}/pdf`} target="_blank" rel="noopener">Export PDF</a>
                     {q.status !== "accepted" && (
                       <button
                         className="text-green-600 underline"
