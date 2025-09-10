@@ -39,6 +39,7 @@
 ## 📂 Structure du projet
 
 ```
+
 apps/web/
 src/
 app/ # Pages Next.js (App Router)
@@ -90,25 +91,25 @@ L’application sera dispo sur 👉 http://localhost:3000
 - [ ] Réservation liée aux devis/WO (sera finalisée en phase 3)
 
 ### ⏳ Phase 2 – Avions & Clients/Fournisseurs (à démarrer)
-- [ ] Liste avions (immat, type, heures, maintenances dues)
-- [ ] Drawer avion (timeline interventions + devis/WO liés)
-- [ ] Liste clients (coordonnées, appareils liés)
-- [ ] Liste fournisseurs (coordonnées, pièces associées)
+- [x] Liste avions (immat, type, heures, maintenances dues)
+- [x] Drawer avion (timeline interventions + devis/WO liés)
+- [x] Liste clients (coordonnées, appareils liés)
+- [x] Liste fournisseurs (coordonnées, pièces associées)
 
 ### ⏳ Phase 3 – Devis & Work Orders (non implémenté)
-- [ ] Création devis (pièces + MO + remise + taxes)
-- [ ] Calculs auto des totaux
-- [ ] Acceptation → génération WO lié
-- [ ] Réservation auto de pièces à l’acceptation
-- [ ] Consommation de pièces à la complétion d’une tâche
-- [ ] Export PDF de devis et WO
+- [x] Création devis (pièces + MO + remise + taxes)
+- [x] Calculs auto des totaux
+- [x] Acceptation → génération WO lié
+- [x] Réservation auto de pièces à l’acceptation
+- [x] Consommation de pièces à la complétion d’une tâche
+- [x] Export PDF de devis et WO
 
 ### ⏳ Phase 4 – DB Cloud (Supabase/Drizzle)
-- [ ] Schéma Drizzle + migrations
-- [ ] Seed initial depuis les mocks
-- [ ] Auth Supabase (email/password)
-- [ ] API sécurisées `/api/parts`, `/api/quotes`, `/api/workorders`
-- [ ] Repository toggle (mock | db)
+- [x] Schéma Drizzle + migrations
+- [x] Seed initial depuis les mocks
+- [x] Auth Supabase (email/password)
+- [x] API sécurisées `/api/parts`, `/api/quotes`, `/api/workorders`
+- [x] Repository toggle (mock | db)
 
 ### ⏳ Phase 5 – Offline-first
 - [ ] PWA manifest + service worker
