@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { ReactNode } from "react";
-import { SidebarNav } from "@/components/SidebarNav";
+import SidebarServer from "@/components/SidebarServer";
 import { ToastProvider } from "@/components/ui/useToast";
 import ToastContainer from "@/components/ui/ToastContainer";
 import OutboxMount from "@/components/OutboxMount";
@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen flex bg-neutral-50 text-slate-900">
         <ToastProvider>
           <OutboxMount />
-          <SidebarNav />
+          <SidebarServer />
           <main className="flex-1 min-h-screen">
             <header className="h-12 border-b flex items-center justify-between px-4 bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/50">
               <div className="font-semibold">GarageFlow</div>
