@@ -1,4 +1,3 @@
-import "server-only";
 import { getDb } from "@/db/client";
 import * as sch from "@/db/schema";
 import { PartsRepo, QuotesRepo, WorkOrdersRepo, PurchaseOrdersRepo, PartBase, StockMove } from "./types";
@@ -98,4 +97,3 @@ export const poRepoDb: PurchaseOrdersRepo = {
     await db.update(sch.purchaseOrders).set({ status: "partially_received" }).where(eq(sch.purchaseOrders.id, poId));
   },
 };
-

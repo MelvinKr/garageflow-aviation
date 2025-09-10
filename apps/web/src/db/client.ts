@@ -1,4 +1,3 @@
-import "server-only";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
 
@@ -15,4 +14,3 @@ export function getDb() {
   _db = drizzle(client);
   return _db!;
 }
-
