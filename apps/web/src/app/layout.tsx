@@ -1,17 +1,25 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import { SidebarNav } from "@/components/SidebarNav";
+import { ToastProvider } from "@/components/ui/useToast";
+import ToastContainer from "@/components/ui/ToastContainer";
+import { useOutboxReplay } from "@/lib/outbox";
 
 export const metadata = { title: "GarageFlow Aviation" };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  function OutboxMount() { useOutboxReplay(); return null; }
   return (
     <html lang="fr">
       <body className="min-h-screen flex bg-neutral-50 text-slate-900">
-        <SidebarNav />
-        <main className="flex-1">
-          {children}
-        </main>
+        <ToastProvider>
+          <OutboxMount />
+          <SidebarNav />
+          <main className="flex-1">
+            {children}
+          </main>
+          <ToastContainer />
+        </ToastProvider>
       </body>
     </html>
   );

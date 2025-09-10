@@ -1,6 +1,8 @@
 "use client";
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { get as idbGet, set as idbSet } from "idb-keyval";
 import partsData from "@/mock/parts.json";
 import quotesData from "@/mock/quotes.json";
 import workordersData from "@/mock/workorders.json";
@@ -127,6 +129,11 @@ type State = {
   addPoItem: (poId: string, item: Omit<PoItem, "id">) => void;
   updatePO: (poId: string, patch: Partial<PurchaseOrder>) => void;
   receivePoItem: (poId: string, itemId: string, qtyToReceive: number) => void;
+
+  // offline outbox
+  outbox: { id: string; type: string; payload: any; ts: string }[];
+  enqueue: (type: string, payload: any) => void;
+  dequeue: (id: string) => void;
 };
 
 // --- PO Types ---
@@ -142,7 +149,9 @@ export type PurchaseOrder = {
   refWoId?: string | null;
 };
 
-export const useMockState = create<State>((set, get) => ({
+export const useMockState = create<State>()(
+  persist(
+    (set, get) => ({
   parts: partsData as Part[],
   quotes: (quotesData as Quote[]) ?? [],
   workorders: (workordersData as WorkOrder[]) ?? [],
@@ -359,7 +368,31 @@ export const useMockState = create<State>((set, get) => ({
       wo.attachments = (wo.attachments ?? []).filter((a) => a.id !== attId);
       return { workorders: [...s.workorders] };
     }),
-}));
+
+  // ------------- Outbox -------------
+  outbox: [],
+  enqueue: (type, payload) =>
+    set((s) => ({ outbox: [{ id: genId("OB"), type, payload, ts: new Date().toISOString() }, ...s.outbox] })),
+  dequeue: (id) => set((s) => ({ outbox: s.outbox.filter((x) => x.id !== id) })),
+    }),
+    {
+      name: "gf-offline",
+      storage: createJSONStorage(() => ({
+        getItem: (k) => idbGet(k) as any,
+        setItem: (k, v) => idbSet(k, v) as any,
+        removeItem: (k) => idbSet(k, undefined as any) as any,
+      })),
+      partialize: (s) => ({
+        parts: s.parts,
+        quotes: s.quotes,
+        workorders: s.workorders,
+        movements: s.movements,
+        purchaseOrders: s.purchaseOrders,
+        outbox: s.outbox,
+      }),
+    }
+  )
+);
 
 // Mock upload image -> DataURL base64
 export async function mockUpload(file: File): Promise<string> {
