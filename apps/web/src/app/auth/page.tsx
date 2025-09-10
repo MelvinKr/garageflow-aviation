@@ -27,13 +27,13 @@ export default function AuthPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password: pass,
-        options: { emailRedirectTo: ${window.location.origin}/auth },
+        options: { emailRedirectTo: `${window.location.origin}/auth` },
       });
       if (error) throw error;
       alert(
         data.user?.confirmed_at
-          ? "Compte créé."
-          : "Compte créé. Vérifie ton email pour confirmer."
+          ? "Compte crÃ©Ã©."
+          : "Compte crÃ©Ã©. VÃ©rifie ton email pour confirmer."
       );
     } catch (e: any) {
       console.error("Signup error:", e);
@@ -48,11 +48,12 @@ export default function AuthPage() {
       <input className="border rounded px-2 py-1 w-full" type="password" placeholder="mot de passe" value={pass} onChange={e=>setPass(e.target.value)} />
       <div className="flex gap-2">
         <button className="px-3 py-1 border rounded" onClick={login}>Se connecter</button>
-        <button className="px-3 py-1 border rounded" onClick={signup}>Créer un compte</button>
+        <button className="px-3 py-1 border rounded" onClick={signup}>CrÃ©er un compte</button>
       </div>
       <p className="text-xs text-gray-500">
-        URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? "OK" : "MANQUANTE"} • KEY: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "OK" : "MANQUANTE"}
+        URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? "OK" : "MANQUANTE"} â€¢ KEY: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "OK" : "MANQUANTE"}
       </p>
     </section>
   );
 }
+
