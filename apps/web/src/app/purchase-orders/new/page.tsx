@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMockState } from "@/store/mockState";
 import { getSuppliers, getParts } from "@/lib/mock";
 import { useState } from "react";
+import ManagerOnly from "@/components/ManagerOnly";
 
 export default function NewPOPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function NewPOPage() {
   }
 
   return (
+    <ManagerOnly>
     <section className="p-6 space-y-4">
       <h1 className="text-xl font-semibold">Nouveau PO</h1>
 
@@ -94,6 +96,6 @@ export default function NewPOPage() {
         </button>
       </div>
     </section>
+    </ManagerOnly>
   );
 }
-

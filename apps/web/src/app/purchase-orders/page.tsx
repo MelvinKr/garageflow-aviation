@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useMockState } from "@/store/mockState";
 import { getSuppliers } from "@/lib/mock";
+import ManagerOnly from "@/components/ManagerOnly";
 
 function statusColor(s: string) {
   const map: Record<string, string> = {
@@ -31,6 +32,7 @@ export default function POListPage() {
   );
 
   return (
+    <ManagerOnly>
     <section className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Bons de commande</h1>
@@ -81,5 +83,6 @@ export default function POListPage() {
         </table>
       </div>
     </section>
+    </ManagerOnly>
   );
 }

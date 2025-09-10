@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMockState } from "@/store/mockState";
 import { getParts, getSuppliers } from "@/lib/mock";
 import { useToast } from "@/components/ui/useToast";
+import ManagerOnly from "@/components/ManagerOnly";
 
 export default function PoDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function PoDetailPage() {
   if (!po) return <section className="p-6 text-sm text-gray-500">PO introuvable.</section>;
 
   return (
+    <ManagerOnly>
     <section className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
@@ -73,6 +75,6 @@ export default function PoDetailPage() {
         </table>
       </div>
     </section>
+    </ManagerOnly>
   );
 }
-

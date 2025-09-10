@@ -27,11 +27,56 @@ export default function WorkOrderDetailPage() {
   const customer = useMemo(() => customers.find((c) => c.id === plane?.ownerId), [plane, customers]);
 
   const [note, setNote] = useState("");
+  // Unconditional hooks: compute with guards to satisfy rules of hooks
+  const __partsSummaryTop = useMemo(() => {
+    const map = new Map<string, { label: string; need: number; reserved: number; avail: number; missing: number; supplier?: string }>();
+    const tasks = wo?.tasks ?? [];
+    for (const t of tasks) {
+      if (!t.partId || !t.qty) continue;
+      const p = parts.find((x) => x.id === t.partId);
+      const need = Number(t.qty ?? 0);
+      const reserved = Number(p?.reservedQty ?? 0);
+      const avail = Math.max(0, Number(p?.qty ?? 0) - reserved);
+      const missing = Math.max(0, need - avail);
+      const key = t.partId;
+      const prev = map.get(key);
+      const label = p ? `${p.sku} — ${p.name}` : t.partId as string;
+      const supplier = p ? suppliers.find((s) => s.id === p.supplierId)?.name : undefined;
+      if (!prev) map.set(key, { label, need, reserved, avail, missing, supplier });
+      else map.set(key, { ...prev, need: prev.need + need, missing: prev.missing + missing });
+    }
+    return Array.from(map.entries()).map(([partId, v]) => ({ partId, ...v }));
+  }, [wo, parts, suppliers]);
+
+  const __activityTop = useMemo(() => {
+    const w = wo;
+    if (!w) return [] as typeof movements;
+    return movements
+      .filter((m) => m.ref === w.id || w.tasks.some((t) => t.partId === m.partId))
+      .slice(0, 30);
+  }, [movements, wo]);
+
+  const __laborTop = useMemo(() => {
+    const tasks = wo?.tasks ?? [];
+    let hours = 0, cost = 0;
+    for (const t of tasks) {
+      const h = t.hours ?? 0;
+      const r = t.rate ?? 95;
+      hours += h;
+      cost += h * r;
+    }
+    return { hours, cost };
+  }, [wo]);
 
   if (!wo) return <section className="p-6 text-sm text-gray-500">WO introuvable.</section>;
 
-  // résumé pièces (besoins vs stock)
-  const partsSummary = useMemo(() => {
+  const partsSummary = __partsSummaryTop;
+  const activity = __activityTop;
+  const labor = __laborTop;
+  const tasksDone = wo.tasks.filter((t) => t.done).length;
+
+  /*   // résumé pièces (besoins vs stock)
+  const partsSummary_ = useMemo(() => {
     const map = new Map<string, { label: string; need: number; reserved: number; avail: number; missing: number; supplier?: string }>();
     for (const t of wo.tasks) {
       if (!t.partId || !t.qty) continue;
@@ -51,7 +96,7 @@ export default function WorkOrderDetailPage() {
   }, [wo, parts, suppliers]);
 
   // activité liée (mouvements partId + ref = WO id)
-  const activity = useMemo(
+  const activity_ = useMemo(
     () =>
       movements
         .filter((m) => m.ref === wo.id || wo.tasks.some((t) => t.partId === m.partId))
@@ -61,7 +106,7 @@ export default function WorkOrderDetailPage() {
 
   const tasksDone = wo.tasks.filter((t) => t.done).length;
 
-  const labor = useMemo(() => {
+  const labor_ = useMemo(() => {
     let hours = 0, cost = 0;
     for (const t of wo.tasks) {
       const h = t.hours ?? 0;
@@ -70,7 +115,7 @@ export default function WorkOrderDetailPage() {
       cost += h * r;
     }
     return { hours, cost };
-  }, [wo.tasks]);
+  }, [wo.tasks]); */
 
   function MockUpload({ onUpload }: { onUpload: (url: string, kind: "photo"|"doc") => void }) {
     return (
@@ -131,14 +176,12 @@ GarageFlow Aviation`
             Avion: <b>{plane ? `${plane.reg} — ${plane.type}` : wo.aircraftId}</b> • Client: <b>{customer?.name ?? "—"}</b> • Statut: <WoStatusBadge status={wo.status} />
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            Ouvert le {new Date(wo.openedAt).toLocaleString()}
+            Ouvert le <span suppressHydrationWarning>{new Date(wo.openedAt).toLocaleString()}</span>
             {wo.closedAt && <> • Clos le {new Date(wo.closedAt).toLocaleString()}</>}
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="px-3 py-1 border rounded hover:bg-gray-50 text-sm" onClick={() => openPrint(buildWorkOrderHtml(wo))}>
-            PDF
-          </button>
+          <a className="px-3 py-1 border rounded text-sm hover:bg-gray-50" href={`/api/workorders/${wo.id}/pdf`} target="_blank" rel="noopener">Export PDF</a>
           {wo.status !== "closed" && (
             <button
               className="px-3 py-1 border rounded hover:bg-gray-50 text-sm"
@@ -383,3 +426,8 @@ GarageFlow Aviation`
     </section>
   );
 }
+
+
+
+
+
