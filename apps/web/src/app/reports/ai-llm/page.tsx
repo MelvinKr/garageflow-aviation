@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import ManagerOrAdminOnly from "@/components/ManagerOrAdminOnly";
 
 export default function AIReportLLMPage() {
   const sp = useSearchParams();
@@ -44,6 +45,7 @@ export default function AIReportLLMPage() {
   };
 
   return (
+    <ManagerOrAdminOnly>
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Rapport IA (LLM)</h1>
@@ -58,6 +60,6 @@ export default function AIReportLLMPage() {
       </div>
       <pre className="p-4 bg-white border rounded whitespace-pre-wrap text-sm leading-6">{md || "Génération en cours..."}</pre>
     </div>
+    </ManagerOrAdminOnly>
   );
 }
-

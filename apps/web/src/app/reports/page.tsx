@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import ManagerOnly from "@/components/ManagerOnly";
 import ExportButtons from "./ExportButtons";
+import Overview from "./Overview";
 import { computeEMA, restockSuggestion } from "@/lib/ema";
 import type { StockKPI, QuoteKPI, WOKPI } from "@/lib/reportTypes";
 import { useSearchParams } from "next/navigation";
@@ -98,8 +99,15 @@ export default function ReportsPage() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Rapports & Prévisions</h1>
-          <ExportButtons stock={stockWithEMA as any} quotes={quotes ?? []} wo={wo ?? []} />
+          <div className="flex gap-2">
+            <ExportButtons stock={stockWithEMA as any} quotes={quotes ?? []} wo={wo ?? []} />
+            <a href={`/reports/ai-llm?months=${months}&alpha=${emaAlpha}`} className="px-3 py-2 rounded border">Analyse IA (LLM)</a>
+          </div>
         </div>
+
+        <section>
+          <Overview />
+        </section>
 
         <div>
           <div className="inline-flex rounded border overflow-hidden">
@@ -269,4 +277,7 @@ export default function ReportsPage() {
     </ManagerOnly>
   );
 }
+
+
+
 
