@@ -3,8 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET() {
   const s = await createSupabaseServerClient();
-  const { data, error } = await s.from("v_part_stock").select("*");
+  const { data, error } = await s.from("v_kpi_summary").select("*").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ items: data ?? [] });
+  return NextResponse.json(data ?? {});
 }
 

@@ -13,20 +13,16 @@ export default async function SuppliersPage() {
               <th className="px-3 py-2 text-left">Nom</th>
               <th className="px-3 py-2 text-left">Email</th>
               <th className="px-3 py-2 text-left">Téléphone</th>
-              <th className="px-3 py-2 text-left">Pièces</th>
-              <th className="px-3 py-2 text-left">Lead time</th>
-              <th className="px-3 py-2 text-left">Devise</th>
+              <th className="px-3 py-2 text-left">Termes</th>
             </tr>
           </thead>
           <tbody>
             {suppliers.map((s) => (
-              <tr key={s.id} className="border-t">
+              <tr key={String(s.id)} className="border-t">
                 <td className="px-3 py-2">{s.name}</td>
                 <td className="px-3 py-2">{s.email}</td>
                 <td className="px-3 py-2">{s.phone}</td>
-                <td className="px-3 py-2">—</td>
-                <td className="px-3 py-2">{(s as any).lead_time_days ?? "-"} j</td>
-                <td className="px-3 py-2">{s.currency ?? "-"}</td>
+                <td className="px-3 py-2">{(s as any).terms ?? "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -35,3 +31,4 @@ export default async function SuppliersPage() {
     </section>
   );
 }
+

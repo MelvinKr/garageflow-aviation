@@ -16,7 +16,7 @@ export default async function Page() {
   ]);
   const { data: partsList } = await supabase
     .from("parts")
-    .select("id,part_number,name,on_hand,min_stock")
+    .select("id,part_number,name,on_hand,min_stock,default_unit_cost")
     .limit(1000);
   const parts = (partsList ?? []).map((p: any) => ({
     id: p.id,
@@ -25,6 +25,7 @@ export default async function Page() {
     qty: Number(p.on_hand ?? 0),
     minQty: Number(p.min_stock ?? 0),
   }));
+  const stockValue = parts.reduce((acc, p) => acc + (p.qty || 0) * Number((partsList || []).find((x:any)=>x.id===p.id)?.default_unit_cost || 0), 0);
   const lowToOrder = parts
     .filter((p) => (p.qty ?? 0) <= (p.minQty ?? 0))
     .sort((a, b) => (a.qty ?? 0) - (b.qty ?? 0))
@@ -38,7 +39,7 @@ export default async function Page() {
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <KpiCard icon={<BagIcon />} label="Pièces" value={partsCount} accent="orange" />
         <KpiCard icon={<PlaneIcon />} label="Avions" value={aircraftCount} accent="slate" />
-        <KpiCard icon={<CoinIcon />} label="Valeur stock" value="—" accent="orange" />
+        <KpiCard icon={<CoinIcon />} label="Valeur stock" value={`${stockValue.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`} accent="orange" />
       </section>
 
       <section className="space-y-3">

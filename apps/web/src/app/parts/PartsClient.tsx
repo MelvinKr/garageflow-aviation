@@ -12,6 +12,9 @@ type Part = {
   qty: number;
   minQty: number;
   location: string;
+  unitCost?: number;
+  unitPrice?: number;
+  currency?: string;
 };
 
 export default function PartsClient({ rows, movementAction }: { rows: Part[]; movementAction: (fd: FormData)=>Promise<any> }) {
@@ -38,6 +41,17 @@ export default function PartsClient({ rows, movementAction }: { rows: Part[]; mo
         ),
       },
       { key: "location", label: "Emplacement" },
+      {
+        key: "unitPrice",
+        label: "Prix",
+        render: (r: Part) => (
+          <span>
+            {typeof r.unitPrice === "number"
+              ? `${(r.unitPrice || 0).toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${r.currency ?? ''}`
+              : "-"}
+          </span>
+        ),
+      },
       {
         key: "actions",
         label: "Actions",

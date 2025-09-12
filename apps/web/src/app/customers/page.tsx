@@ -1,10 +1,7 @@
 import { listCustomers } from "@/data/customers.repo";
-import { listAircraft } from "@/data/aircraft.repo";
 
 export default async function CustomersPage() {
-  const [customers, aircraft] = await Promise.all([listCustomers({ limit: 500 }), listAircraft({ limit: 1000 })]);
-  const planesByOwner = new Map<string, number>();
-  for (const a of aircraft as any[]) planesByOwner.set((a as any).owner_id ?? (a as any).ownerId, (planesByOwner.get((a as any).owner_id ?? (a as any).ownerId) ?? 0) + 1);
+  const customers = await listCustomers({ limit: 500 });
 
   return (
     <section className="p-6 space-y-4">
@@ -26,8 +23,8 @@ export default async function CustomersPage() {
                 <td className="px-3 py-2">{c.name}</td>
                 <td className="px-3 py-2">{c.email}</td>
                 <td className="px-3 py-2">{c.phone}</td>
-                <td className="px-3 py-2">{planesByOwner.get(c.id) ?? 0}</td>
-                <td className="px-3 py-2">{(c as any).terms ?? "-"}</td>
+                <td className="px-3 py-2">—</td>
+                <td className="px-3 py-2">{(c as any).billing_address ?? "-"}</td>
               </tr>
             ))}
           </tbody>

@@ -14,6 +14,9 @@ export default async function PartsPage({ searchParams }: { searchParams?: Promi
       qty: Number(p.on_hand ?? 0),
       minQty: Number(p.min_stock ?? 0),
       location: "",
+      unitCost: Number((p as any).default_unit_cost ?? 0),
+      unitPrice: Number((p as any).default_unit_price ?? 0),
+      currency: String((p as any).currency ?? ""),
     }))
     .filter((p) => (onlyLow ? Number(p.qty ?? 0) <= Number(p.minQty ?? 0) : true));
 
@@ -24,12 +27,12 @@ export default async function PartsPage({ searchParams }: { searchParams?: Promi
         <nav className="text-sm space-x-3">
           <a href="/parts" className="underline">Toutes</a>
           <a href="/parts?lowStock=1" className="underline">Sous le seuil</a>
-          <button
+          <a
             className="ml-4 px-3 py-1 border rounded text-sm hover:bg-gray-50"
-            onClick={() => downloadCSV("inventaire.csv", toCSV(rows as any))}
+            href={`/api/parts/export?lowStock=${onlyLow ? "1" : "0"}`}
           >
             Export CSV
-          </button>
+          </a>
         </nav>
       </div>
 

@@ -13,6 +13,9 @@ export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>v
   const [name, setName] = useState("");
   const [min, setMin] = useState(0);
   const [qty, setQty] = useState(0);
+  const [unitCost, setUnitCost] = useState<number | undefined>(undefined);
+  const [unitPrice, setUnitPrice] = useState<number | undefined>(undefined);
+  const [currency, setCurrency] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,6 +26,9 @@ export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>v
         setName(p.name || "");
         setMin(Number(p.min_stock ?? 0));
         setQty(Number(p.on_hand ?? 0));
+        setUnitCost(p.default_unit_cost == null ? undefined : Number(p.default_unit_cost));
+        setUnitPrice(p.default_unit_price == null ? undefined : Number(p.default_unit_price));
+        setCurrency((p as any).currency ?? undefined);
       } catch (e: any) {
         push({ type: "error", message: e?.message || String(e) });
         onClose();
@@ -35,7 +41,14 @@ export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>v
 
   async function saveMeta() {
     try {
-      await updatePartAction({ id, name, min_stock: min });
+      await updatePartAction({
+        id,
+        name,
+        min_stock: min,
+        default_unit_cost: unitCost,
+        default_unit_price: unitPrice,
+        currency,
+      });
       push({ type: "success", message: "Sauvegardé" });
       startTransition(() => router.refresh());
       onClose();
@@ -72,6 +85,18 @@ export default function PartDrawer({ id, onClose }: { id: string; onClose: ()=>v
         <label className="text-sm grid gap-1">
           <span className="text-gray-500">Seuil min</span>
           <input type="number" className="border rounded px-2 py-1" value={min} onChange={e=>setMin(Number(e.target.value)||0)} />
+        </label>
+        <label className="text-sm grid gap-1">
+          <span className="text-gray-500">Prix unitaire</span>
+          <input type="number" className="border rounded px-2 py-1" value={unitPrice ?? ''} onChange={e=>setUnitPrice(e.target.value===''?undefined:Number(e.target.value))} />
+        </label>
+        <label className="text-sm grid gap-1">
+          <span className="text-gray-500">Coût unitaire</span>
+          <input type="number" className="border rounded px-2 py-1" value={unitCost ?? ''} onChange={e=>setUnitCost(e.target.value===''?undefined:Number(e.target.value))} />
+        </label>
+        <label className="text-sm grid gap-1">
+          <span className="text-gray-500">Devise</span>
+          <input className="border rounded px-2 py-1" value={currency ?? ''} onChange={e=>setCurrency(e.target.value || undefined)} />
         </label>
         <div className="col-span-2 text-sm">
           <div className="text-gray-500 mb-1">Quantité en stock</div>
