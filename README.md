@@ -1,13 +1,12 @@
 ---
 
 # ✈ GarageFlow Aviation
-
 Application MRO (Maintenance, Repair & Overhaul) pour la gestion d’un hangar aéronautique.  
 Objectif : digitaliser **inventaire → achats → devis → ordres de travail → traçabilité** avec **Supabase** comme backend (DB + Auth + Storage).
 
 ---
 
-## 🚀 Fonctionnalités
+##  Fonctionnalités
 - **Inventaire** : pièces, seuils min, mouvements (IN/OUT/ADJUST/RECEIVE), historique complet.
 - **Achats (PO)** : création, suivi des statuts, réception partielle/complète.
 - **Devis (Quotes)** : workflow DRAFT → SENT → APPROVED, génération automatique de Work Orders.
