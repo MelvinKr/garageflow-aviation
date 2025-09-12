@@ -1,9 +1,9 @@
 // apps/web/src/data/parts.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Part } from "@/lib/supabase/types";
 
 export async function listParts(opts?: { q?: string; limit?: number; offset?: number }) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const from = (opts?.offset ?? 0);
   let query = supabase
@@ -34,7 +34,7 @@ export async function listParts(opts?: { q?: string; limit?: number; offset?: nu
 }
 
 export async function getPart(id: string | number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
   const { data, error } = await supabase
     .from("parts")
@@ -98,7 +98,7 @@ export async function updatePart(id: string | number, patch: Partial<{ name: str
 }
 
 export async function deletePart(id: string | number) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = sbAdmin();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
   const { error } = await supabase.from("parts").delete().eq("id", key as any);
   if (error) throw new Error(`deletePart: ${error.message}`);
