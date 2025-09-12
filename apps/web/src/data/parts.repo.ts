@@ -3,6 +3,7 @@ import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Part } from "@/lib/supabase/types";
 
 export async function listParts(opts?: { q?: string; limit?: number; offset?: number }) {
+  // Try SSR anon first; fallback to service role if available and permission denied
   const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const from = (opts?.offset ?? 0);
@@ -28,15 +29,39 @@ export async function listParts(opts?: { q?: string; limit?: number; offset?: nu
   if (q) {
     query = query.or(`part_number.ilike.%${q}%,name.ilike.%${q}%`);
   }
-  const { data, error } = await query;
+  let { data, error } = await query;
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    let q2 = admin
+      .from("parts")
+      .select(
+        [
+          "id",
+          "part_number",
+          "name",
+          "on_hand",
+          "min_stock",
+          "default_unit_cost",
+          "default_unit_price",
+          "tax_rate_pct",
+          "margin_target_pct",
+          "currency",
+        ].join(",")
+      )
+      .range(from, from + limit - 1)
+      .order("part_number");
+    if (q) q2 = q2.or(`part_number.ilike.%${q}%,name.ilike.%${q}%`);
+    ({ data, error } = await q2);
+  }
   if (error) throw new Error(`listParts: ${error.message}`);
   return (data ?? []) as any[];
 }
 
 export async function getPart(id: string | number) {
+  // Try SSR anon first; fallback to service role if available and permission denied
   const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("parts")
     .select(
       [
@@ -54,6 +79,27 @@ export async function getPart(id: string | number) {
     )
     .eq("id", key as any)
     .single();
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("parts")
+      .select(
+        [
+          "id",
+          "part_number",
+          "name",
+          "on_hand",
+          "min_stock",
+          "default_unit_cost",
+          "default_unit_price",
+          "tax_rate_pct",
+          "margin_target_pct",
+          "currency",
+        ].join(",")
+      )
+      .eq("id", key as any)
+      .single());
+  }
   if (error) throw new Error(`getPart: ${error.message}`);
   return data as Part;
 }
