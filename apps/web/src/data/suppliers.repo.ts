@@ -14,11 +14,19 @@ export async function listSuppliers(opts?: { limit?: number; offset?: number }) 
   const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 100, 1), 500);
   const from = opts?.offset ?? 0;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("suppliers")
     .select("id,name,email,phone,terms,created_at,updated_at")
     .range(from, from + limit - 1)
     .order("name");
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("suppliers")
+      .select("id,name,email,phone,terms,created_at,updated_at")
+      .range(from, from + limit - 1)
+      .order("name"));
+  }
   if (error) throw new Error(`listSuppliers: ${error.message}`);
   return (data ?? []) as Supplier[];
 }

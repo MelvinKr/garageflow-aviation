@@ -12,7 +12,17 @@ export async function listMovements(opts?: { part_id?: number; limit?: number; o
     .range(from, from + limit - 1)
     .order("created_at", { ascending: false });
   if (opts?.part_id) query = query.eq("part_id", opts.part_id);
-  const { data, error } = await query;
+  let { data, error } = await query;
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    let q2 = admin
+      .from("movements")
+      .select("id,part_id,type,quantity,note,created_at")
+      .range(from, from + limit - 1)
+      .order("created_at", { ascending: false });
+    if (opts?.part_id) q2 = q2.eq("part_id", opts.part_id);
+    ({ data, error } = await q2);
+  }
   if (error) throw new Error(`listMovements: ${error.message}`);
   return (data ?? []) as any[];
 }

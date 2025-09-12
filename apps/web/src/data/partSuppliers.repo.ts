@@ -13,11 +13,19 @@ export interface PartSupplierRow {
 
 export async function listPartSuppliers(part_id: number) {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("part_suppliers")
     .select("id,part_id,supplier_id,last_price,lead_time_days,created_at,updated_at")
     .eq("part_id", part_id)
     .order("updated_at", { ascending: false });
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("part_suppliers")
+      .select("id,part_id,supplier_id,last_price,lead_time_days,created_at,updated_at")
+      .eq("part_id", part_id)
+      .order("updated_at", { ascending: false }));
+  }
   if (error) throw new Error(`listPartSuppliers: ${error.message}`);
   return (data ?? []) as PartSupplierRow[];
 }

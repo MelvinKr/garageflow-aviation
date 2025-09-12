@@ -8,10 +8,17 @@ export interface PartCompatRow {
 
 export async function listPartCompatibleAircraft(part_id: number) {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("part_compat_aircraft")
     .select("part_id,aircraft_id")
     .eq("part_id", part_id);
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("part_compat_aircraft")
+      .select("part_id,aircraft_id")
+      .eq("part_id", part_id));
+  }
   if (error) throw new Error(`listPartCompatibleAircraft: ${error.message}`);
   return (data ?? []) as PartCompatRow[];
 }

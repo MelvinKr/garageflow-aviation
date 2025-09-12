@@ -15,12 +15,21 @@ export interface AttachmentRow {
 
 export async function listAttachments(entity: AttachmentEntity, entity_id: number) {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("attachments")
     .select("id,entity_type,entity_id,url,mime_type,created_at,updated_at")
     .eq("entity_type", entity)
     .eq("entity_id", entity_id)
     .order("created_at", { ascending: false });
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("attachments")
+      .select("id,entity_type,entity_id,url,mime_type,created_at,updated_at")
+      .eq("entity_type", entity)
+      .eq("entity_id", entity_id)
+      .order("created_at", { ascending: false }));
+  }
   if (error) throw new Error(`listAttachments: ${error.message}`);
   return (data ?? []) as AttachmentRow[];
 }

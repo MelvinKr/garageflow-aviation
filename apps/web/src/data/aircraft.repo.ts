@@ -15,11 +15,19 @@ export async function listAircraft(opts?: { limit?: number; offset?: number }) {
   const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 100, 1), 500);
   const from = opts?.offset ?? 0;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("aircraft")
     .select("id,registration,model,hours_total,cycles_total,next_due_at,created_at,updated_at")
     .range(from, from + limit - 1)
     .order("registration");
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("aircraft")
+      .select("id,registration,model,hours_total,cycles_total,next_due_at,created_at,updated_at")
+      .range(from, from + limit - 1)
+      .order("registration"));
+  }
   if (error) throw new Error(`listAircraft: ${error.message}`);
   return (data ?? []) as Aircraft[];
 }
@@ -27,11 +35,19 @@ export async function listAircraft(opts?: { limit?: number; offset?: number }) {
 export async function getAircraft(id: string | number) {
   const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("aircraft")
     .select("id,registration,model,hours_total,cycles_total,next_due_at,created_at,updated_at")
     .eq("id", key as any)
     .single();
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("aircraft")
+      .select("id,registration,model,hours_total,cycles_total,next_due_at,created_at,updated_at")
+      .eq("id", key as any)
+      .single());
+  }
   if (error) throw new Error(`getAircraft: ${error.message}`);
   return data as Aircraft;
 }

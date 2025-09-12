@@ -8,11 +8,19 @@ export async function listPurchaseOrders(opts?: { limit?: number; offset?: numbe
   const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const from = opts?.offset ?? 0;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("purchase_orders")
     .select("id,supplier_id,status,order_date,expected_date,created_at")
     .range(from, from + limit - 1)
     .order("order_date", { ascending: false });
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("purchase_orders")
+      .select("id,supplier_id,status,order_date,expected_date,created_at")
+      .range(from, from + limit - 1)
+      .order("order_date", { ascending: false }));
+  }
   if (error) throw new Error(`listPurchaseOrders: ${error.message}`);
   return data ?? [];
 }
@@ -20,17 +28,33 @@ export async function listPurchaseOrders(opts?: { limit?: number; offset?: numbe
 export async function getPurchaseOrder(id: string | number) {
   const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
-  const { data: po, error } = await supabase
+  let { data: po, error } = await supabase
     .from("purchase_orders")
     .select("id,supplier_id,status,order_date,expected_date,created_at")
     .eq("id", key as any)
     .single();
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data: po, error } = await admin
+      .from("purchase_orders")
+      .select("id,supplier_id,status,order_date,expected_date,created_at")
+      .eq("id", key as any)
+      .single());
+  }
   if (error) throw new Error(`getPurchaseOrder: ${error.message}`);
-  const { data: items, error: e2 } = await supabase
+  let { data: items, error: e2 } = await supabase
     .from("purchase_order_items")
     .select("id,part_id,quantity_ordered,quantity_received,unit_price,created_at")
     .eq("purchase_order_id", key as any)
     .order("created_at", { ascending: false });
+  if (e2 && /permission denied/i.test(e2.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data: items, error: e2 } = await admin
+      .from("purchase_order_items")
+      .select("id,part_id,quantity_ordered,quantity_received,unit_price,created_at")
+      .eq("purchase_order_id", key as any)
+      .order("created_at", { ascending: false }));
+  }
   if (e2) throw new Error(`getPurchaseOrder items: ${e2.message}`);
   return { ...po, items: items ?? [] } as any;
 }

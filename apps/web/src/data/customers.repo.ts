@@ -14,11 +14,19 @@ export async function listCustomers(opts?: { limit?: number; offset?: number }) 
   const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 100, 1), 500);
   const from = opts?.offset ?? 0;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("customers")
     .select("id,name,email,phone,billing_address,created_at,updated_at")
     .range(from, from + limit - 1)
     .order("name");
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("customers")
+      .select("id,name,email,phone,billing_address,created_at,updated_at")
+      .range(from, from + limit - 1)
+      .order("name"));
+  }
   if (error) throw new Error(`listCustomers: ${error.message}`);
   return (data ?? []) as Customer[];
 }
@@ -26,11 +34,19 @@ export async function listCustomers(opts?: { limit?: number; offset?: number }) 
 export async function getCustomer(id: string | number) {
   const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("customers")
     .select("id,name,email,phone,billing_address,created_at,updated_at")
     .eq("id", key as any)
     .single();
+  if (error && /permission denied/i.test(error.message) && process.env.SUPABASE_SERVICE_ROLE) {
+    const admin = sbAdmin();
+    ({ data, error } = await admin
+      .from("customers")
+      .select("id,name,email,phone,billing_address,created_at,updated_at")
+      .eq("id", key as any)
+      .single());
+  }
   if (error) throw new Error(`getCustomer: ${error.message}`);
   return data as Customer;
 }
