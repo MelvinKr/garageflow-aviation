@@ -1,7 +1,3 @@
-Parfait ✅
-Voici ton **README.md** corrigé et sûr à 100 % (aucun caractère exotique en tête, donc pas de confusion avec du YAML).
-Tu peux le mettre tel quel dans ton projet, en gardant bien l’extension `.md`.
-
 ---
 
 ````markdown
@@ -196,7 +192,3 @@ MIT – usage libre et adaptation.
 ```
 
 ---
-
-👉 Ce fichier doit absolument s’appeler **`README.md`** (pas `.yml`, pas `.yaml`).  
-Veux-tu que je t’explique aussi **comment tester ton README en CI** (linter Markdown + preview) pour éviter toute confusion avec YAML ?
-```
