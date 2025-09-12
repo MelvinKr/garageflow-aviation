@@ -194,6 +194,3 @@ MIT – usage libre et adaptation.
 ```
 
 ---
-
-👉 Veux-tu que j’y ajoute aussi une **section “Déploiement” (Vercel + Supabase)** avec étapes précises pour push ta prod ?
-```
