@@ -1,9 +1,9 @@
 // apps/web/src/data/workorders.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 import type { WorkOrder } from "@/lib/supabase/types";
 
 export async function listWorkOrders(opts?: { limit?: number; offset?: number }) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const from = opts?.offset ?? 0;
   const { data, error } = await supabase
@@ -16,7 +16,7 @@ export async function listWorkOrders(opts?: { limit?: number; offset?: number })
 }
 
 export async function getWorkOrder(id: string | number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
   const { data, error } = await supabase.from("work_orders").select("*").eq("id", key as any).single();
   if (error) throw new Error(`getWorkOrder: ${error.message}`);

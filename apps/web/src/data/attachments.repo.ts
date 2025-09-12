@@ -1,5 +1,5 @@
 // apps/web/src/data/attachments.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type AttachmentEntity = "part" | "movement" | "quote" | "work_order" | "purchase_order";
 
@@ -14,7 +14,7 @@ export interface AttachmentRow {
 }
 
 export async function listAttachments(entity: AttachmentEntity, entity_id: number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("attachments")
     .select("id,entity_type,entity_id,url,mime_type,created_at,updated_at")

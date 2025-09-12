@@ -1,4 +1,4 @@
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type Aircraft = {
   id: number;
@@ -12,7 +12,7 @@ export type Aircraft = {
 };
 
 export async function listAircraft(opts?: { limit?: number; offset?: number }) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 100, 1), 500);
   const from = opts?.offset ?? 0;
   const { data, error } = await supabase
@@ -25,7 +25,7 @@ export async function listAircraft(opts?: { limit?: number; offset?: number }) {
 }
 
 export async function getAircraft(id: string | number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
   const { data, error } = await supabase
     .from("aircraft")

@@ -1,5 +1,5 @@
 // apps/web/src/data/partSuppliers.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface PartSupplierRow {
   id: number;
@@ -12,7 +12,7 @@ export interface PartSupplierRow {
 }
 
 export async function listPartSuppliers(part_id: number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("part_suppliers")
     .select("id,part_id,supplier_id,last_price,lead_time_days,created_at,updated_at")

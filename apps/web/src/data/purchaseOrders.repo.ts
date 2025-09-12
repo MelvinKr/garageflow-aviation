@@ -1,11 +1,11 @@
 // apps/web/src/data/purchaseOrders.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 import { createMovement } from "./movements.repo";
 
 export type PoStatus = "Draft" | "Ordered" | "Partially_Received" | "Received" | "Cancelled";
 
 export async function listPurchaseOrders(opts?: { limit?: number; offset?: number }) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const from = opts?.offset ?? 0;
   const { data, error } = await supabase
@@ -18,7 +18,7 @@ export async function listPurchaseOrders(opts?: { limit?: number; offset?: numbe
 }
 
 export async function getPurchaseOrder(id: string | number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
   const { data: po, error } = await supabase
     .from("purchase_orders")

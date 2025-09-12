@@ -1,4 +1,4 @@
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type Supplier = {
   id: number;
@@ -11,7 +11,7 @@ export type Supplier = {
 };
 
 export async function listSuppliers(opts?: { limit?: number; offset?: number }) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 100, 1), 500);
   const from = opts?.offset ?? 0;
   const { data, error } = await supabase

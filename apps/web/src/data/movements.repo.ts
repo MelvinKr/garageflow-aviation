@@ -1,9 +1,9 @@
 // apps/web/src/data/movements.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 import type { MovementType } from "@/lib/supabase/types";
 
 export async function listMovements(opts?: { part_id?: number; limit?: number; offset?: number }) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const from = opts?.offset ?? 0;
   let query = supabase

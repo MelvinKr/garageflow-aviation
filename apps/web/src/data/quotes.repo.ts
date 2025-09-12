@@ -1,9 +1,9 @@
 // apps/web/src/data/quotes.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Quote, QuoteStatus } from "@/lib/supabase/types";
 
 export async function listQuotes(opts?: { status?: QuoteStatus; limit?: number; offset?: number }) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const from = opts?.offset ?? 0;
   let query = supabase.from("quotes").select("*").range(from, from + limit - 1).order("created_at", { ascending: false });
@@ -18,7 +18,7 @@ export async function listQuotes(opts?: { status?: QuoteStatus; limit?: number; 
 }
 
 export async function getQuote(id: string | number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const key = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
   const { data, error } = await supabase.from("quotes").select("*").eq("id", key as any).single();
   if (error) throw new Error(`getQuote: ${error.message}`);

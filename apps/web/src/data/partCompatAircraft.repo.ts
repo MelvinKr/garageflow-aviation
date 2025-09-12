@@ -1,5 +1,5 @@
 // apps/web/src/data/partCompatAircraft.repo.ts
-import { sbAdmin } from "@/lib/supabase/server";
+import { sbAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface PartCompatRow {
   part_id: number;
@@ -7,7 +7,7 @@ export interface PartCompatRow {
 }
 
 export async function listPartCompatibleAircraft(part_id: number) {
-  const supabase = sbAdmin();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("part_compat_aircraft")
     .select("part_id,aircraft_id")
