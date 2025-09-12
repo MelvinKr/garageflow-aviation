@@ -1,49 +1,55 @@
+Parfait ✅
+Voici ton **README.md** corrigé et sûr à 100 % (aucun caractère exotique en tête, donc pas de confusion avec du YAML).
+Tu peux le mettre tel quel dans ton projet, en gardant bien l’extension `.md`.
+
 ---
 
-# ✈ GarageFlow Aviation
+````markdown
+# GarageFlow Aviation
+
 Application MRO (Maintenance, Repair & Overhaul) pour la gestion d’un hangar aéronautique.  
-Objectif : digitaliser **inventaire → achats → devis → ordres de travail → traçabilité** avec **Supabase** comme backend (DB + Auth + Storage).
+Objectif : digitaliser **inventaire → achats → devis → ordres de travail → traçabilité** avec **Supabase** (DB + Auth + Storage).
 
 ---
 
-##  Fonctionnalités
-- **Inventaire** : pièces, seuils min, mouvements (IN/OUT/ADJUST/RECEIVE), historique complet.
-- **Achats (PO)** : création, suivi des statuts, réception partielle/complète.
-- **Devis (Quotes)** : workflow DRAFT → SENT → APPROVED, génération automatique de Work Orders.
-- **Ordres de travail (WO)** : tâches, réservations/consommations de pièces, QA, clôture.
-- **Référentiels** : flotte (aircraft), clients, fournisseurs, compatibilité pièces↔avions.
-- **Documents (Attachments)** : certificats, photos, rapports (PDF/JPG/PNG).
-- **Dashboard** : KPIs stock, POs à recevoir, devis en attente, WOs par statut.
+## 🚀 Fonctionnalités
+
+- **Inventaire** : pièces, seuils min, mouvements (IN / OUT / ADJUST / RECEIVE), historique complet.  
+- **Achats (PO)** : création, suivi des statuts, réception partielle ou complète.  
+- **Devis (Quotes)** : workflow DRAFT → SENT → APPROVED, génération automatique de Work Orders.  
+- **Ordres de travail (WO)** : tâches, réservations et consommations de pièces, QA, clôture.  
+- **Référentiels** : flotte (aircraft), clients, fournisseurs, compatibilité pièces↔avions.  
+- **Documents (Attachments)** : certificats, photos, rapports (PDF, JPG, PNG).  
+- **Dashboard** : KPIs stock, POs à recevoir, devis en attente, WOs par statut.  
 - **Rôles & Sécurité** : Tech / Manager / Admin via Supabase Auth + RLS.
 
 ---
 
 ## 🏗️ Stack
-- **Frontend** : Next.js 15 (App Router), React Query, Tailwind.
-- **Backend** : Route Handlers Next.js (Server Actions + API sécurisées).
-- **Database** : PostgreSQL (Supabase) avec RLS activé.
-- **Auth** : Supabase Auth (profiles.role).
-- **Storage** : Supabase Storage (attachments privés via signed URLs).
-- **Validation** : Zod.
-- **Tests** : Playwright (E2E), Vitest (unit/integration).
+
+- **Frontend** : Next.js 15 (App Router), React Query, Tailwind CSS  
+- **Backend** : Route Handlers Next.js (API sécurisées)  
+- **Base de données** : PostgreSQL (Supabase) avec RLS  
+- **Auth** : Supabase Auth (profiles.role)  
+- **Storage** : Supabase Storage (fichiers privés avec URLs signées)  
+- **Validation** : Zod  
+- **Tests** : Playwright (E2E), Vitest (unit/integration)
 
 ---
 
 ## ⚙️ Installation
 
 ### Prérequis
-- Node.js >= 20
-- pnpm >= 9
-- Compte Supabase avec DB provisionnée (schéma déjà créé et peuplé)
+- Node.js ≥ 20  
+- pnpm ≥ 9  
+- Compte Supabase avec DB provisionnée
 
-### Cloner & installer
+### Étapes
 ```bash
 git clone https://github.com/<user>/garageflow-aviation.git
 cd garageflow-aviation
 pnpm install
 ````
-
-### Variables d’environnement
 
 Créer `apps/web/.env.local` :
 
@@ -51,19 +57,17 @@ Créer `apps/web/.env.local` :
 NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 
-# Serveur uniquement
-SUPABASE_SERVICE_ROLE=<service-role-key>
-NEXTAUTH_SECRET=<long-random-secret>
+SUPABASE_SERVICE_ROLE=<service-role-key>   # uniquement côté serveur
+NEXTAUTH_SECRET=<random-long-secret>
 ```
 
-### Lancer en dev
+Lancer en développement :
 
 ```bash
-cd apps/web
-pnpm dev
+pnpm --filter web dev
 ```
 
-### Build & start
+Build & run :
 
 ```bash
 pnpm build
@@ -78,103 +82,103 @@ pnpm start
 apps/web/
  ├─ src/
  │   ├─ app/              # Pages Next.js
- │   ├─ lib/supabase/     # Clients Supabase (browser/server/types)
+ │   ├─ lib/supabase/     # Clients Supabase (browser / server / types)
  │   ├─ repositories/     # Accès DB (parts, po, quotes, wo, etc.)
  │   ├─ lib/queries.ts    # Hooks React Query
  │   ├─ components/       # UI réutilisable
- │   └─ app/api/          # Routes API serveur (ops sensibles, uploads)
+ │   └─ app/api/          # Routes API (ops sensibles, uploads)
 ```
 
 ---
 
-## 📋 Roadmap d’intégration (Supabase → App)
+## 📋 Roadmap
 
 ### Phase 0 — Pré-vol
 
-* [ ] Supprimer tous les mocks (`mock/`, flags, fixtures).
-* [ ] Vérifier `.env.local` (Supabase URL/keys).
-* [ ] Installer dépendances (@supabase/supabase-js, react-query, zod).
+* [ ] Supprimer tous les mocks et flags
+* [ ] Vérifier `.env.local`
+* [ ] Installer dépendances (@supabase/supabase-js, react-query, zod)
 
 ### Phase 1 — Clients Supabase
 
-* [ ] `lib/supabase/browser.ts`, `server.ts`, (optionnel) `admin.ts`.
-* [ ] Générer types Supabase.
+* [ ] Créer `lib/supabase/browser.ts` et `server.ts`
+* [ ] Générer les types Supabase
 
 ### Phase 2 — Repositories
 
-* [ ] Créer `repositories/*.repo.ts` (parts, purchaseOrders, quotes, workOrders, aircraft, customers, suppliers, attachments).
-* [ ] Ajouter validations Zod.
+* [ ] Implémenter `repositories/*.repo.ts`
+* [ ] Ajouter validations Zod
 
 ### Phase 3 — React Query
 
-* [ ] Provider global `QueryClientProvider`.
-* [ ] Hooks par ressource (useParts, useQuotes, useWorkOrders…).
-* [ ] Gestion toasts succès/erreur.
+* [ ] Provider global QueryClient
+* [ ] Hooks par ressource (useParts, useQuotes, etc.)
+* [ ] Toasts succès/erreur
 
-### Phase 4 — Intégration Pages
+### Phase 4 — Pages
 
-* [ ] `/parts` (liste + mouvements).
-* [ ] `/purchase-orders` (réception partielle/complète).
-* [ ] `/quotes` (workflow, acceptation → WO).
-* [ ] `/work-orders` (tasks, réservations, consommations, QA → close).
-* [ ] `/aircraft`, `/customers`, `/suppliers` (CRUD simples).
-* [ ] `/attachments` (uploads + liens signés).
-* [ ] `Dashboard` (KPIs & exports).
+* [ ] `/parts` (liste + mouvements)
+* [ ] `/purchase-orders` (réception)
+* [ ] `/quotes` (workflow + acceptation → WO)
+* [ ] `/work-orders` (tasks, réservations, QA → close)
+* [ ] `/aircraft`, `/customers`, `/suppliers`
+* [ ] `/attachments` (upload + signed URLs)
+* [ ] Dashboard (KPIs + exports)
 
-### Phase 5 — API Routes sécurisées
+### Phase 5 — API Routes
 
 * [ ] `/api/parts/[id]/movement`
 * [ ] `/api/purchase-orders/[id]/receive`
 * [ ] `/api/quotes/[id]/accept`
 * [ ] `/api/workorders/[id]/consume`
-* [ ] `/api/attachments` (uploads privés)
+* [ ] `/api/attachments`
 
 ### Phase 6 — Auth & Rôles
 
-* [ ] Middleware Next.js (protection routes).
-* [ ] UI ACL (désactiver actions non autorisées).
-* [ ] Vérifier RLS Supabase cohérente.
+* [ ] Middleware Next.js (protection routes)
+* [ ] ACL UI (désactiver actions non autorisées)
+* [ ] Vérification RLS Supabase
 
-### Phase 7 — RPC Métier
+### Phase 7 — RPC
 
-* [ ] Brancher `quote_accept`, `po_receive`, `wo_consume`.
+* [ ] Brancher `quote_accept`, `po_receive`, `wo_consume`
 
 ### Phase 8 — Tests
 
-* [ ] Unitaires (Zod, calculs).
-* [ ] Intégration (API routes).
-* [ ] E2E Playwright (flux complet devis→WO→close).
+* [ ] Unitaires (Zod, calculs)
+* [ ] Intégration (API routes)
+* [ ] E2E Playwright (flux complet devis → WO → close)
 
 ### Phase 9 — Observabilité & Sécurité
 
-* [ ] Logs structurés.
-* [ ] Headers sécurité (CSP, HSTS).
-* [ ] Rate-limiting sur POST sensibles.
-* [ ] Pagination server-side + index DB.
+* [ ] Logs structurés
+* [ ] Headers sécurité (CSP, HSTS)
+* [ ] Rate-limit POST sensibles
+* [ ] Pagination server-side + index DB
 
 ### Phase 10 — Go-Live
 
-* [ ] ENV prod configurés.
-* [ ] RLS testée (roles Tech/Manager/Admin).
-* [ ] Backups DB & Storage validés.
-* [ ] Smoke test prod OK.
-* [ ] Runbook rollback prêt.
+* [ ] ENV prod configurés
+* [ ] RLS testée (roles Tech/Manager/Admin)
+* [ ] Backups DB & Storage validés
+* [ ] Smoke test prod OK
+* [ ] Runbook rollback prêt
 
 ---
 
 ## 🧪 Scénario E2E attendu
 
-1. Créer un devis (DRAFT → SENT → APPROVED).
-2. Vérifier création auto d’un WO avec réservations.
-3. Consommer une pièce (OUT) → stock mis à jour.
-4. Passer WO en QA → Close.
-5. Générer rapport stock et export PDF.
+1. Créer un devis (DRAFT → SENT → APPROVED)
+2. Génération auto d’un Work Order avec réservations
+3. Consommation d’une pièce (OUT) → décrémente stock
+4. Passage en QA → Close
+5. Génération rapport stock et export PDF
 
 ---
 
 ## 🤝 Contribution
 
-* Fork, branche `feature/...`, puis PR.
+* Forker le repo, créer une branche `feature/...`, ouvrir une PR
 * Vérifier lint & tests :
 
   ```bash
@@ -192,3 +196,7 @@ MIT – usage libre et adaptation.
 ```
 
 ---
+
+👉 Ce fichier doit absolument s’appeler **`README.md`** (pas `.yml`, pas `.yaml`).  
+Veux-tu que je t’explique aussi **comment tester ton README en CI** (linter Markdown + preview) pour éviter toute confusion avec YAML ?
+```
